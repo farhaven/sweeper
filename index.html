@@ -1,0 +1,62 @@
+<!DOCTYPE html5>
+<html>
+	<head>
+		<title>Sweeper</title>
+		<script>
+let fieldSize = {w: 20, h: 20}
+var center = {x: 0, y: 0}
+function updateField() {
+	var x0 = center.x - (fieldSize.w / 2)
+	var y0 = center.y - (fieldSize.h / 2)
+	var x1 = center.x + (fieldSize.w / 2)
+	var y1 = center.y + (fieldSize.h / 2)
+
+	var txt = "(" + x0 + ", " + y0 + ") - (" + x1 + ", " + y1 + ")"
+	var image = new Image();
+	image.src = "/field?x0=" + x0 + "&y0=" + y0 + "&x1=" + x1 + "&y1=" + y1
+	image.onload = function() {
+		draw(txt, this);
+	};
+}
+
+function draw(txt, img) {
+	var locSpan = document.getElementById("location")
+	locSpan.innerText = txt;
+
+	var canvas = document.getElementById("field")
+	var ctx = canvas.getContext('2d');
+	ctx.drawImage(img, 0, 0);
+}
+
+function setup() {
+	document.addEventListener("keydown", event => {
+		switch (event.key) {
+			case "ArrowLeft":
+				center.x -= 1;
+				break;
+			case "ArrowRight":
+				center.x += 1;
+				break;
+			case "ArrowUp":
+				center.y -= 1;
+				break;
+			case "ArrowDown":
+				center.y += 1;
+				break;
+			default:
+				console.log("unhandled key event", event);
+				return;
+		}
+		updateField();
+	})
+}
+		</script>
+	</head>
+	<body>
+		<span id="location"><!-- filled async --></span>
+		<p>
+			<canvas id="field" width="800" height="800">
+		</p>
+		<script>setup(); updateField()</script>
+	</body>
+</html>
