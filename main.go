@@ -16,6 +16,8 @@ import (
 	"strconv"
 )
 
+const _zoom = 32
+
 // IntToBytes converts x to a little endian byte slice
 func IntToBytes(val int64) []byte {
 	x := uint64(val + math.MinInt64)
@@ -57,20 +59,18 @@ func (m MineField) IsMineOnLocation(x, y int) bool {
 // RenderToImage returns a gray scale image that represents the are of the mine field m as indicated by the rectangle. The returned
 // image is zoomed by a factor of 4. That is, the image is four times as wide and four times as high as rect.
 func (m MineField) RenderToImage(rect image.Rectangle) image.Image {
-	const zoom = 32
-
-	img := image.NewGray(image.Rect(rect.Min.X*zoom, rect.Min.Y*zoom, rect.Max.X*zoom, rect.Max.Y*zoom))
+	img := image.NewGray(image.Rect(rect.Min.X*_zoom, rect.Min.Y*_zoom, rect.Max.X*_zoom, rect.Max.Y*_zoom))
 	grid := image.Uniform{color.Black}
 
 	draw.Draw(img, img.Bounds(), &image.Uniform{color.White}, image.ZP, draw.Over)
 
-	for y := rect.Min.Y * zoom; y < rect.Max.Y*zoom; y += zoom {
-		r := image.Rect(rect.Min.X*zoom, y-1, rect.Max.X*zoom, y+1)
+	for y := rect.Min.Y * _zoom; y < rect.Max.Y*_zoom; y += _zoom {
+		r := image.Rect(rect.Min.X*_zoom, y-1, rect.Max.X*_zoom, y+1)
 		draw.Draw(img, r, &grid, image.ZP, draw.Over)
 	}
 
-	for x := rect.Min.X * zoom; x < rect.Max.X*zoom; x += zoom {
-		r := image.Rect(x-1, rect.Min.Y*zoom, x+1, rect.Max.Y*zoom)
+	for x := rect.Min.X * _zoom; x < rect.Max.X*_zoom; x += _zoom {
+		r := image.Rect(x-1, rect.Min.Y*_zoom, x+1, rect.Max.Y*_zoom)
 		draw.Draw(img, r, &grid, image.ZP, draw.Over)
 	}
 
@@ -78,10 +78,10 @@ func (m MineField) RenderToImage(rect image.Rectangle) image.Image {
 	for y := rect.Min.Y; y < rect.Max.Y; y++ {
 		for x := rect.Min.X; x < rect.Max.X; x++ {
 			if m.IsMineOnLocation(x, y) {
-				x0 := x * zoom
-				y0 := y * zoom
-				x1 := (x + 1) * zoom
-				y1 := (y + 1) * zoom
+				x0 := x * _zoom
+				y0 := y * _zoom
+				x1 := (x + 1) * _zoom
+				y1 := (y + 1) * _zoom
 				r := image.Rect(x0, y0, x1, y1)
 				draw.Draw(img, r, &mine, image.ZP, draw.Over)
 			}
@@ -91,7 +91,28 @@ func (m MineField) RenderToImage(rect image.Rectangle) image.Image {
 	return img
 }
 
-func (m MineField) handler(w http.ResponseWriter, r *http.Request) {
+func (m MineField) clickHandler(w http.ResponseWriter, r *http.Request) {
+	x, err := strconv.Atoi(r.FormValue("x"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "invalid x: %s\n", err)
+		return
+	}
+
+	y, err := strconv.Atoi(r.FormValue("y"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "invalid x: %s\n", err)
+		return
+	}
+
+	x /= _zoom
+	y /= _zoom
+
+	log.Println("click on", x, y)
+}
+
+func (m MineField) fieldHandler(w http.ResponseWriter, r *http.Request) {
 	badParam := func(name string, err error) {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "invalid %s: %s\n", name, err)
@@ -178,7 +199,8 @@ func main() {
 	}
 
 	http.HandleFunc("/", handleIndex)
-	http.HandleFunc("/field", m.handler)
+	http.HandleFunc("/field", m.fieldHandler)
+	http.HandleFunc("/click", m.clickHandler)
 
 	log.Println("HTTP handler set up")
 

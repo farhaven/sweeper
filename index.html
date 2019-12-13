@@ -49,6 +49,14 @@ function setup() {
 		}
 		updateField();
 	})
+
+	var field = document.getElementById("field");
+	field.addEventListener("mouseup", event => {
+		const rect = field.getBoundingClientRect();
+		var x = event.clientX - rect.left;
+		var y = event.clientY - rect.top;
+		console.log(event, x, y);
+	});
 }
 		</script>
 	</head>
