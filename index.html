@@ -67,7 +67,19 @@ function setup() {
 	}
 
 	// TODO: Add handlers for other events?
-	var ws = new WebSocket("ws://localhost:8080/ws"); // TODO: get hostname from location
+	var protocol = "ws"
+	if (document.location.protocol == "https") {
+		protocol = "wss"
+	}
+	var path = "/ws"
+	if (document.location.pathname == "/") {
+		path = "ws"
+	}
+
+	let socketURL = protocol + "://" + document.location.host + document.location.pathname + path
+	console.log("socketurl", socketURL);
+	var ws = new WebSocket(socketURL);
+
 	ws.addEventListener("message", handleMessage);
 
 	// Add event handlers for inputs
