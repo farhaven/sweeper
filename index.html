@@ -3,68 +3,108 @@
 	<head>
 		<title>Sweeper</title>
 		<script>
-let fieldSize = {w: 20, h: 20}
-var center = {x: 0, y: 0}
-function updateField() {
-	var x0 = center.x - (fieldSize.w / 2)
-	var y0 = center.y - (fieldSize.h / 2)
-	var x1 = center.x + (fieldSize.w / 2)
-	var y1 = center.y + (fieldSize.h / 2)
+function handleMessage(socketMessage) {
+	var message = JSON.parse(socketMessage.data);
+	console.log("got a new message", message);
 
-	var txt = "(" + x0 + ", " + y0 + ") - (" + x1 + ", " + y1 + ")"
-	var image = new Image();
-	image.src = "/field?x0=" + x0 + "&y0=" + y0 + "&x1=" + x1 + "&y1=" + y1
-	image.onload = function() {
-		draw(txt, this);
-	};
-}
-
-function draw(txt, img) {
+	// Update position display
 	var locSpan = document.getElementById("location")
-	locSpan.innerText = txt;
+	locSpan.innerText = JSON.stringify(message.Position);
 
-	var canvas = document.getElementById("field")
-	var ctx = canvas.getContext('2d');
-	ctx.drawImage(img, 0, 0);
+	for (y = 0; y < message.Data.length; y++) {
+		for (x = 0; x < message.Data[y].length; x++) {
+			var fe = document.getElementById("field-" + y + "-" + x);
+			fe.innerText = String.fromCharCode(message.Data[y][x]);
+		}
+	}
 }
 
 function setup() {
+	// Build playing field
+	var field = document.getElementById("field");
+	for (y = 0; y < 10; y++) {
+		var row = document.createElement("div");
+		row.classList.add("fieldRow");
+		for (x = 0; x < 10; x++) {
+			var elem = document.createElement("div");
+			elem.id = "field-" + y + "-" + x;
+			elem.classList.add("fieldElement");
+			elem.dataset.x = x;
+			elem.dataset.y = y;
+			row.appendChild(elem);
+		}
+		field.appendChild(row);
+	}
+
+	// TODO: Add handlers for other events?
+	var ws = new WebSocket("ws://localhost:8080/ws"); // TODO: get hostname from location
+	ws.addEventListener("message", handleMessage);
+
+	// Add event handlers for inputs
 	document.addEventListener("keydown", event => {
+		var request = {
+			Kind: "move",
+			X: 0,
+			Y: 0
+		}
+
 		switch (event.key) {
 			case "ArrowLeft":
-				center.x -= 1;
+				request.X = -1;
 				break;
 			case "ArrowRight":
-				center.x += 1;
+				request.X = 1;
 				break;
 			case "ArrowUp":
-				center.y -= 1;
+				request.Y = -1;
 				break;
 			case "ArrowDown":
-				center.y += 1;
+				request.Y += 1;
 				break;
 			default:
 				console.log("unhandled key event", event);
 				return;
 		}
-		updateField();
+
+		console.log("sending request", request);
+
+		ws.send(JSON.stringify(request));
 	})
 
 	var field = document.getElementById("field");
 	field.addEventListener("mouseup", event => {
-		const rect = field.getBoundingClientRect();
-		var x = event.clientX - rect.left;
-		var y = event.clientY - rect.top;
-		console.log(event, x, y);
+		var x = parseInt(event.target.dataset.x);
+		var y = parseInt(event.target.dataset.y);
+		var request = {
+			Kind: "click",
+			X: x,
+			Y: y
+		}
+		ws.send(JSON.stringify(request));
 	});
+
 }
 		</script>
+		<style>
+		body {
+			font-size: 300%;
+		}
+		.fieldElement {
+			width: 1em;
+			height: 1em;
+			border: 1px solid black;
+			font: monospace;
+			text-align: center;
+		}
+		.fieldRow {
+			display: flex;
+		}
+		</style>
 	</head>
 	<body>
 		<span id="location"><!-- filled async --></span>
-		<p>
-			<canvas id="field" width="800" height="800">
-		</p>
-		<script>setup(); updateField()</script>
+		<div id="field">
+		</div>
+		<script>setup();</script>
 	</body>
 </html>
