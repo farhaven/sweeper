@@ -76,18 +76,52 @@ function setup() {
 		ws.send(JSON.stringify(request));
 	})
 
+
 	var field = document.getElementById("field");
-	field.addEventListener("mouseup", event => {
+	// Set to true while scrolling the viewport
+	var scrolling = false;
+	var pointerdown = false;
+	var scrollDelta = {
+		x: 0,
+		y: 0
+	}
+	field.addEventListener("pointerdown", event => {
+		pointerdown = true;
+	});
+	field.addEventListener("pointermove", event => {
+		if (!pointerdown) {
+			return;
+		}
+		if (Math.abs(event.movementX) > 10 || Math.abs(event.movementY) > 10) {
+			scrolling = true;
+			// Immediately move viewport
+			var req = {
+				Kind: "move",
+				X: -parseInt(event.movementX / 175),
+				Y: -parseInt(event.movementY / 175)
+			}
+			if (req.X == 0 && req.Y == 0) {
+				return;
+			}
+			ws.send(JSON.stringify(req));
+		}
+	});
+	field.addEventListener("pointerup", event => {
+		pointerdown = false;
 		console.log("mouse event", event);
 		event.preventDefault();
-		var x = parseInt(event.target.dataset.x);
-		var y = parseInt(event.target.dataset.y);
-		var request = {
-			Kind: "uncover",
-			X: x,
-			Y: y
+		if (scrolling) {
+			scrolling = false;
+		} else {
+			var x = parseInt(event.target.dataset.x);
+			var y = parseInt(event.target.dataset.y);
+			var request = {
+				Kind: "uncover",
+				X: x,
+				Y: y
+			}
+			ws.send(JSON.stringify(request));
 		}
-		ws.send(JSON.stringify(request));
 	});
 
 }
