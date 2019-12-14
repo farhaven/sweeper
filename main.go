@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -26,7 +27,35 @@ type ClientRequest struct {
 }
 
 type Server struct {
-	m *MineField
+	sync.RWMutex
+	m              *MineField
+	updateChannels map[chan bool]bool
+}
+
+func (s *Server) AddUpdateChannel(ch chan bool) {
+	s.Lock()
+	defer s.Unlock()
+
+	s.updateChannels[ch] = true
+}
+
+func (s *Server) RemoveUpdateChannel(ch chan bool) {
+	s.Lock()
+	defer s.Unlock()
+
+	delete(s.updateChannels, ch)
+}
+
+func (s *Server) TriggerGlobalUpdate() {
+	s.RLock()
+	defer s.RUnlock()
+
+	for ch := range s.updateChannels {
+		select {
+		case ch <- true:
+		default:
+		}
+	}
 }
 
 func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +72,8 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	// - send initial viewport
 	viewport := image.Rect(-_viewPortWidth/2, -_viewPortHeight/2, _viewPortWidth/2, _viewPortHeight/2)
 	updateViewport := make(chan bool)
+	s.AddUpdateChannel(updateViewport)
+	defer s.RemoveUpdateChannel(updateViewport)
 	defer close(updateViewport)
 	go func() {
 		for range updateViewport {
@@ -65,9 +96,7 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	updateViewport <- true
 
 	// TODO:
-	// - register websocket in server, defer removal
 	// - send events to user:
-	//   - field changed (because someone clicked on it, or the viewpoint was moved)
 	//   - game over (someone clicked on a mine)
 
 	for {
@@ -94,18 +123,18 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 			viewport.Max.X += req.X
 			viewport.Min.Y += req.Y
 			viewport.Max.Y += req.Y
+			// Trigger local viewport update
+			select {
+			case updateViewport <- true:
+			default:
+			}
 		case "click":
-			s.m.HandleClick(viewport.Min.X + req.X, viewport.Min.Y + req.Y)
-			// Trigger viewport update
+			s.m.HandleClick(viewport.Min.X+req.X, viewport.Min.Y+req.Y)
+			// TODO: Only trigger updates in overlapping viewports
+			s.TriggerGlobalUpdate()
 		default:
 			log.Printf("invalid request: %#v", req)
 			return
-		}
-
-		// Trigger viewport update
-		select {
-		case updateViewport <- true:
-		default:
 		}
 	}
 }
@@ -147,6 +176,7 @@ func main() {
 
 	s := Server{
 		m: m,
+		updateChannels: make(map[chan bool]bool),
 	}
 
 	log.Println("Registering HTTP handlers")
