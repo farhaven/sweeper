@@ -22,6 +22,8 @@ function handleMessage(socketMessage) {
 			fe.classList.remove("flag");
 			fe.classList.remove("boom");
 			fe.classList.remove("dim");
+			fe.classList.remove("mark");
+			fe.classList.remove("number");
 			fe.innerText = String.fromCharCode(message.Data[y][x]);
 			switch (fe.innerText) {
 				case "P":
@@ -33,7 +35,14 @@ function handleMessage(socketMessage) {
 				case "0":
 					fe.classList.add("dim");
 					break;
+				case "?":
+					fe.classList.add("mark");
+					break;
+				case " ":
+					// no extra class
+					break;
 				default:
+					fe.classList.add("number");
 					break;
 			}
 		}
@@ -140,13 +149,18 @@ function setup() {
 		.flag {
 			color: darkred;
 		}
+		.mark {
+			color: darkblue;
+		}
 		.boom {
 			color: red;
 			background: black;
 		}
 		.dim {
-			font-size: 100%;
-			color: gray;
+			color: #bbb;
+		}
+		.number {
+			color: #666;
 		}
 		.fieldRow {
 			display: flex;
