@@ -200,7 +200,7 @@ func (m *MineField) FloodFill(x int, y int) {
 	center := image.Pt(x, y)
 	dist := func(p image.Point) float64 {
 		// Distance of p from center
-		d := math.Sqrt(math.Pow(float64(center.X - p.X), 2) + math.Pow(float64(center.Y - p.Y), 2))
+		d := math.Sqrt(math.Pow(float64(center.X-p.X), 2) + math.Pow(float64(center.Y-p.Y), 2))
 		return d
 	}
 

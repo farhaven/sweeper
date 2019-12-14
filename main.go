@@ -177,7 +177,7 @@ func main() {
 	// os.Exit(0)
 
 	s := Server{
-		m: m,
+		m:              m,
 		updateChannels: make(map[chan bool]bool),
 	}
 
