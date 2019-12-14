@@ -22,7 +22,7 @@ var websocketUpgrader = websocket.Upgrader{
 }
 
 type ClientRequest struct {
-	Kind string // kind of request: 'move' or 'click'
+	Kind string // kind of request: 'move' or 'uncover'
 	X, Y int    // parameters: deltaX, deltaY for move, X and Y relative to viewport for click
 }
 
@@ -130,8 +130,8 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 			case updateViewport <- true:
 			default:
 			}
-		case "click":
-			s.m.HandleClick(viewport.Min.X+req.X, viewport.Min.Y+req.Y)
+		case "uncover":
+			s.m.Uncover(viewport.Min.X+req.X, viewport.Min.Y+req.Y)
 			// TODO: Only trigger updates in overlapping viewports
 			s.TriggerGlobalUpdate()
 		default:

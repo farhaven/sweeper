@@ -146,7 +146,7 @@ func (m *MineField) CountNeighboringMines(x int, y int) int {
 	return mines
 }
 
-func (m *MineField) HandleClick(x int, y int) {
+func (m *MineField) Uncover(x int, y int) {
 	m.Lock()
 	defer m.Unlock()
 
