@@ -113,10 +113,12 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Printf("got client request %#v", req)
 
-		// TODO:
 		// - handle user requests:
 		//   - move viewport
 		//   - click on field
+		// TODO:
+		// - rename 'click' to 'uncover'
+		// - add a way to place flags (P) and unknown (?) markers
 		switch req.Kind {
 		case "move":
 			viewport.Min.X += req.X
