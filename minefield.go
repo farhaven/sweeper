@@ -119,7 +119,7 @@ func (m *MineField) ExtractPlayerView(viewport image.Rectangle) ViewPort {
 			// Translate viewport x to array index
 			ax := x - viewport.Min.X
 
-			if m.IsMineOnLocation(x, y) && m.triggered[image.Pt(x, y)] {
+			if m.IsMineOnLocation(x, y) /* && m.triggered[image.Pt(x, y)] */ {
 				res.Data[ay][ax] = VPEMine
 			} else {
 				res.Data[ay][ax] = VPENone
@@ -133,6 +133,17 @@ func (m *MineField) ExtractPlayerView(viewport image.Rectangle) ViewPort {
 	}
 
 	return res
+}
+
+// CountNeighboringMines returns the number of mines bordering on the field identified by x, y
+func (m *MineField) CountNeighboringMines(x int, y int) int {
+	mines := 0
+	for _, n := range m.Neighbors(image.Pt(x, y)) {
+		if m.IsMineOnLocation(n.X, n.Y) {
+			mines++
+		}
+	}
+	return mines
 }
 
 func (m *MineField) HandleClick(x int, y int) {
@@ -157,26 +168,79 @@ func (m *MineField) HandleClick(x int, y int) {
 		return
 	}
 
-	// count mines in neighboring fields
-	mines := 0
-	for xoff := -1; xoff <= 1; xoff++ {
-		if m.IsMineOnLocation(x+xoff, y-1) {
-			mines++
-		}
-		if m.IsMineOnLocation(x+xoff, y+1) {
-			mines++
-		}
-	}
+	mines := m.CountNeighboringMines(x, y)
 
-	if m.IsMineOnLocation(x-1, y) {
-		mines++
-	}
-	if m.IsMineOnLocation(x+1, y) {
-		mines++
+	if mines == 0 {
+		m.FloodFill(x, y)
 	}
 
 	log.Printf("neighboring mines for x=%d, y=%d: %d", x, y, mines)
 	m.uncovered[point] = mines
+}
+
+func (m *MineField) Neighbors(p image.Point) []image.Point {
+	res := make([]image.Point, 0)
+
+	x, y := p.X, p.Y
+
+	// Add all neighbors with distance less than maxRadius to the new unhandled set
+	for xoff := -1; xoff <= 1; xoff++ {
+		res = append(res, image.Pt(x+xoff, y-1), image.Pt(x+xoff, y+1))
+	}
+
+	res = append(res, image.Pt(x-1, y), image.Pt(x+1, y))
+
+	return res
+}
+
+// FloodFill starts a flood filling operation centered on x and y, uncovering fields without mines for a limited radius
+func (m *MineField) FloodFill(x int, y int) {
+	const maxRadius = 30 // Maximum uncovering distance
+
+	center := image.Pt(x, y)
+	dist := func(p image.Point) float64 {
+		// Distance of p from center
+		d := math.Sqrt(math.Pow(float64(center.X - p.X), 2) + math.Pow(float64(center.Y - p.Y), 2))
+		return d
+	}
+
+	alreadyHandled := make(map[image.Point]bool)
+	uncovered := make(map[image.Point]int)
+	unhandled := make(map[image.Point]bool)
+	unhandled[center] = true
+
+	log.Println("uncovering neighbors", uncovered)
+
+	for len(unhandled) != 0 {
+		// As long as there are points to handle, keep uncovering
+		newUnhandled := make(map[image.Point]bool)
+
+		for pt := range unhandled {
+			// If pt has 0 neighboring mines, add it to the uncovered set and add all its neighbors with distance less than maxRadius
+			// to the new unhandled set
+			mines := m.CountNeighboringMines(pt.X, pt.Y)
+			uncovered[pt] = mines
+
+			if mines != 0 {
+				continue
+			}
+
+			for _, n := range m.Neighbors(pt) {
+				if !alreadyHandled[n] && dist(n) <= maxRadius {
+					newUnhandled[n] = true
+				}
+			}
+
+			alreadyHandled[pt] = true
+		}
+
+		unhandled = newUnhandled
+	}
+
+	// Mark all uncovered on the minefield
+	for pt, mines := range uncovered {
+		m.uncovered[pt] = mines
+	}
 }
 
 // RenderToImage returns a gray scale image that represents the are of the mine field m as indicated by the rectangle. The returned
