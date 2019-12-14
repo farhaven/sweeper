@@ -13,8 +13,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const _viewPortWidth = 30
-const _viewPortHeight = 30
+const _viewPortWidth = 20
+const _viewPortHeight = 20
 
 var websocketUpgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
