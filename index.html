@@ -19,7 +19,23 @@ function handleMessage(socketMessage) {
 	for (y = 0; y < message.Data.length; y++) {
 		for (x = 0; x < message.Data[y].length; x++) {
 			var fe = document.getElementById("field-" + y + "-" + x);
+			fe.classList.remove("flag");
+			fe.classList.remove("boom");
+			fe.classList.remove("dim");
 			fe.innerText = String.fromCharCode(message.Data[y][x]);
+			switch (fe.innerText) {
+				case "P":
+					fe.classList.add("flag");
+					break;
+				case "X":
+					fe.classList.add("boom");
+					break;
+				case "0":
+					fe.classList.add("dim");
+					break;
+				default:
+					break;
+			}
 		}
 	}
 }
@@ -77,74 +93,96 @@ function setup() {
 	})
 
 
+	var mode = "mark";
+
 	var field = document.getElementById("field");
-	// Set to true while scrolling the viewport
-	var scrolling = false;
-	var pointerdown = false;
-	var scrollDelta = {
-		x: 0,
-		y: 0
-	}
-	field.addEventListener("pointerdown", event => {
-		pointerdown = true;
-	});
-	field.addEventListener("pointermove", event => {
-		if (!pointerdown) {
-			return;
-		}
-		if (Math.abs(event.movementX) > 10 || Math.abs(event.movementY) > 10) {
-			scrolling = true;
-			// Immediately move viewport
-			var req = {
-				Kind: "move",
-				X: -parseInt(event.movementX / 175),
-				Y: -parseInt(event.movementY / 175)
-			}
-			if (req.X == 0 && req.Y == 0) {
-				return;
-			}
-			ws.send(JSON.stringify(req));
-		}
-	});
-	field.addEventListener("pointerup", event => {
-		pointerdown = false;
-		console.log("mouse event", event);
+	field.addEventListener("click", event => {
+		console.log("click", event);
 		event.preventDefault();
-		if (scrolling) {
-			scrolling = false;
-		} else {
-			var x = parseInt(event.target.dataset.x);
-			var y = parseInt(event.target.dataset.y);
-			var request = {
-				Kind: "uncover",
-				X: x,
-				Y: y
-			}
-			ws.send(JSON.stringify(request));
+		var x = parseInt(event.target.dataset.x);
+		var y = parseInt(event.target.dataset.y);
+		var request = {
+			Kind: mode,
+			X: x,
+			Y: y
 		}
+		ws.send(JSON.stringify(request));
 	});
 
+	var modeMark = document.getElementById("mode-mark");
+	var modeUncover = document.getElementById("mode-uncover");
+
+	modeMark.addEventListener("click", event => {
+		mode = "mark";
+		modeUncover.classList.remove("active");
+		modeMark.classList.add("active");
+	});
+
+	modeUncover.addEventListener("click", event => {
+		mode = "uncover";
+		modeUncover.classList.add("active");
+		modeMark.classList.remove("active");
+	});
 }
 		</script>
 		<style>
 		.fieldElement {
 			width: 1em;
 			height: 1em;
+			min-width: 1em;
+			max-width: 1em;
+			min-height: 1em;
+			max-height: 1em;
 			border: 1px solid black;
-			font: monospace;
+			font-family: monospace;
 			text-align: center;
+		}
+		.flag {
+			color: darkred;
+		}
+		.boom {
+			color: red;
+			background: black;
+		}
+		.dim {
+			font-size: 100%;
+			color: gray;
 		}
 		.fieldRow {
 			display: flex;
 		}
 		#field {
+			font-size: 220%;
+			padding-top: 1em;
+		}
+		#location {
+			font-family: monospace;
+		}
+		#menu {
+			top: 0;
+			right: 0;
+			position: absolute;
+			padding-right: 2em;
+		}
+		li {
 			font-size: 200%;
+			list-style: none;
+			padding: 1em;
+		}
+		li.active {
+			background: #28d;
 		}
 		</style>
 	</head>
 	<body>
 		<span id="location"><!-- filled async --></span>
 		<div id="field">
+		</div>
+		<div id="menu">
+			<ul>
+				<li class="active" id="mode-mark">Mark</li>
+				<li id="mode-uncover">Uncover</li>
+			</ul>
 		</div>
 		<script>setup();</script>
 	</body>

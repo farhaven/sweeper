@@ -13,27 +13,7 @@
 		<div id="d"></div>
 		<script type="application/javascript">
 var d = document.getElementById("d");
-d.draggable = true;
-d.addEventListener("pointerdown", (event) => {
-	event.preventDefault();
-	var x = event.clientX - event.layerX;
-	var y = event.clientY - event.layerY;
-	console.log("down", x, y, event);
-});
-d.addEventListener("pointermove", (event) => {
-	var x = event.movementX;
-	var y = event.movementY;
-	if (x == 0 && y == 0) {
-		return;
-	}
-	console.log("move", x, y, event);
-});
-d.addEventListener("pointerup", (event) => {
-	var x = event.clientX - event.layerX;
-	var y = event.clientY - event.layerY;
-	console.log("up", x, y, event);
-});
-console.log("done");
+console.log("d", d);
 		</script>
 	</body>
 </html>

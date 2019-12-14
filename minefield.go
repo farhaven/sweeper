@@ -71,6 +71,14 @@ func IntToBytes(val int64) []byte {
 	return res[:]
 }
 
+type Mark int
+const (
+	MarkNone = iota
+	MarkQuestion
+	MarkFlag
+	MarkMax // Not a real value, only used for cycling through marks
+)
+
 type MineField struct {
 	sync.RWMutex
 	seed      [16]byte
@@ -79,6 +87,8 @@ type MineField struct {
 	uncovered map[image.Point]int
 	// Map of triggered mines
 	triggered map[image.Point]bool
+	// Map of marks, i.e. flags and question marks
+	marks map[image.Point]Mark
 }
 
 func NewMineField(threshold uint32) (*MineField, error) {
@@ -86,6 +96,7 @@ func NewMineField(threshold uint32) (*MineField, error) {
 		threshold: 5,
 		uncovered: make(map[image.Point]int),
 		triggered: make(map[image.Point]bool),
+		marks: make(map[image.Point]Mark),
 	}
 	_, err := rand.Read(m.seed[:])
 	if err != nil {
@@ -119,8 +130,15 @@ func (m *MineField) ExtractPlayerView(viewport image.Rectangle) ViewPort {
 			// Translate viewport x to array index
 			ax := x - viewport.Min.X
 
-			if m.IsMineOnLocation(x, y) && m.triggered[image.Pt(x, y)] {
+			pt := image.Pt(x, y)
+			if m.IsMineOnLocation(x, y) && m.triggered[pt] {
 				res.Data[ay][ax] = VPEMine
+			} else if m.marks[pt] != MarkNone {
+				if m.marks[pt] == MarkQuestion {
+					res.Data[ay][ax] = VPEMaybe
+				} else {
+					res.Data[ay][ax] = VPEFlag
+				}
 			} else {
 				res.Data[ay][ax] = VPENone
 			}
@@ -146,6 +164,15 @@ func (m *MineField) CountNeighboringMines(x int, y int) int {
 	return mines
 }
 
+func (m *MineField) Mark(x int, y int) {
+	m.Lock()
+	defer m.Unlock()
+
+	// Only set marks on fields that have not been uncovered or triggered
+	pt := image.Pt(x, y)
+	m.marks[pt] = (m.marks[pt] + 1) % MarkMax
+}
+
 func (m *MineField) Uncover(x int, y int) {
 	m.Lock()
 	defer m.Unlock()
@@ -158,6 +185,9 @@ func (m *MineField) Uncover(x int, y int) {
 		log.Printf("not doing anything for %s", point)
 		return
 	}
+
+	// Remove location from list of marked points
+	delete(m.marks, point)
 
 	// Handle click:
 	// - click on mine: game over
