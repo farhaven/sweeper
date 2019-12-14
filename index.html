@@ -78,9 +78,25 @@ function setup() {
 
 	let socketURL = protocol + "://" + document.location.host + document.location.pathname + path
 	console.log("socketurl", socketURL);
-	var ws = new WebSocket(socketURL);
 
-	ws.addEventListener("message", handleMessage);
+	var ws = null;
+	var connectSocket = function() {
+		try {
+			ws = new WebSocket(socketURL);
+		} catch (e) {
+			console.log("can't create websocket", e);
+			return;
+		}
+		ws.addEventListener("message", handleMessage);
+		ws.addEventListener("close", event => {
+			console.log("reconnecting", event);
+			connectSocket();
+		});
+		ws.addEventListener("error", event => {
+			console.log(event);
+		});
+	};
+	connectSocket();
 
 	// Add event handlers for inputs
 	document.addEventListener("keydown", event => {
