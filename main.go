@@ -136,7 +136,7 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 		case "mark":
 			log.Println("mark request", req)
 			// TODO: Only trigger updates in overlapping viewports
-			s.m.Mark(viewport.Min.X+req.X, viewport.Min.Y + req.Y)
+			s.m.Mark(viewport.Min.X+req.X, viewport.Min.Y+req.Y)
 			s.TriggerGlobalUpdate()
 		default:
 			log.Printf("invalid request: %#v", req)
