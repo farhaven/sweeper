@@ -72,6 +72,7 @@ func IntToBytes(val int64) []byte {
 }
 
 type Mark int
+
 const (
 	MarkNone = iota
 	MarkQuestion
@@ -96,7 +97,7 @@ func NewMineField(threshold uint32) (*MineField, error) {
 		threshold: 5,
 		uncovered: make(map[image.Point]int),
 		triggered: make(map[image.Point]bool),
-		marks: make(map[image.Point]Mark),
+		marks:     make(map[image.Point]Mark),
 	}
 	_, err := rand.Read(m.seed[:])
 	if err != nil {
