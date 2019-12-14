@@ -3,6 +3,11 @@
 	<head>
 		<title>Sweeper</title>
 		<script>
+let viewport = {
+	width: 30,
+	height: 30
+}
+
 function handleMessage(socketMessage) {
 	var message = JSON.parse(socketMessage.data);
 	console.log("got a new message", message);
@@ -22,10 +27,10 @@ function handleMessage(socketMessage) {
 function setup() {
 	// Build playing field
 	var field = document.getElementById("field");
-	for (y = 0; y < 10; y++) {
+	for (y = 0; y < viewport.width; y++) {
 		var row = document.createElement("div");
 		row.classList.add("fieldRow");
-		for (x = 0; x < 10; x++) {
+		for (x = 0; x < viewport.height; x++) {
 			var elem = document.createElement("div");
 			elem.id = "field-" + y + "-" + x;
 			elem.classList.add("fieldElement");
@@ -73,6 +78,8 @@ function setup() {
 
 	var field = document.getElementById("field");
 	field.addEventListener("mouseup", event => {
+		console.log("mouse event", event);
+		event.preventDefault();
 		var x = parseInt(event.target.dataset.x);
 		var y = parseInt(event.target.dataset.y);
 		var request = {
@@ -86,9 +93,6 @@ function setup() {
 }
 		</script>
 		<style>
-		body {
-			font-size: 300%;
-		}
 		.fieldElement {
 			width: 1em;
 			height: 1em;
@@ -98,6 +102,9 @@ function setup() {
 		}
 		.fieldRow {
 			display: flex;
+		}
+		#field {
+			font-size: 200%;
 		}
 		</style>
 	</head>

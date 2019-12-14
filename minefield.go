@@ -119,7 +119,7 @@ func (m *MineField) ExtractPlayerView(viewport image.Rectangle) ViewPort {
 			// Translate viewport x to array index
 			ax := x - viewport.Min.X
 
-			if m.IsMineOnLocation(x, y) /* && m.triggered[image.Pt(x, y)] */ {
+			if m.IsMineOnLocation(x, y) && m.triggered[image.Pt(x, y)] {
 				res.Data[ay][ax] = VPEMine
 			} else {
 				res.Data[ay][ax] = VPENone
