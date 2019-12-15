@@ -147,7 +147,13 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
-	log.Println("got request for index")
+	log.Println("got request for path", r.URL.Path)
+
+	if r.URL.Path != "/" {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "can't find resource for path %s", r.URL.Path)
+		return
+	}
 
 	fh, err := os.Open("index.html")
 	if err != nil {
