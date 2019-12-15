@@ -5,8 +5,10 @@ import (
 	"image"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
+	"golang.org/x/time/rate"
 )
 
 type ClientRequest struct {
@@ -81,7 +83,13 @@ func (p *Player) Loop(conn *websocket.Conn) {
 	defer p.s.RemoveUpdateChannel(updateViewport)
 	defer close(updateViewport)
 	go func() {
+		// Rate limiter for updates
+		limit := rate.NewLimiter(3, 5)
+
 		for range updateViewport {
+			if !limit.Allow() {
+				log.Println("Not sending update, rate limit exceeded")
+			}
 			wr, err := conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				log.Println("can't get writer for websocket:", err)
@@ -103,6 +111,17 @@ func (p *Player) Loop(conn *websocket.Conn) {
 	}()
 	// immediately trigger update
 	updateViewport <- true
+	// Periodically send updates
+	ticker := time.NewTicker(5 * time.Second)
+	go func() {
+		for range ticker.C {
+			select {
+			case updateViewport <- true:
+			default:
+			}
+		}
+	}()
+	defer ticker.Stop()
 
 	// TODO:
 	// - send events to user:
