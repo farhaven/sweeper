@@ -61,7 +61,7 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	p := Player{s}
+	p := NewPlayer(s)
 	p.Loop(conn)
 }
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"image"
 	"log"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -17,14 +18,30 @@ const _viewPortWidth = 20
 const _viewPortHeight = 20
 
 type Player struct {
+	sync.RWMutex
 	s        *Server
 	viewport image.Rectangle
 }
 
-func (p *Player) Loop(conn *websocket.Conn) {
-	// - send initial viewport
-	p.viewport = image.Rect(-_viewPortWidth/2, -_viewPortHeight/2, _viewPortWidth/2, _viewPortHeight/2)
+func NewPlayer(s *Server) *Player {
+	return &Player{
+		s:        s,
+		viewport: image.Rect(-_viewPortWidth/2, -_viewPortHeight/2, _viewPortWidth/2, _viewPortHeight/2),
+	}
+}
 
+
+func (p *Player) shiftViewport(deltaX int, deltaY int) {
+	p.Lock()
+	defer p.Unlock()
+
+	p.viewport.Min.X += deltaX
+	p.viewport.Max.X += deltaX
+	p.viewport.Min.Y += deltaY
+	p.viewport.Max.Y += deltaY
+}
+
+func (p *Player) Loop(conn *websocket.Conn) {
 	updateViewport := make(chan bool)
 	p.s.AddUpdateChannel(updateViewport)
 	defer p.s.RemoveUpdateChannel(updateViewport)
@@ -72,10 +89,7 @@ func (p *Player) Loop(conn *websocket.Conn) {
 		//   - click on field
 		switch req.Kind {
 		case "move":
-			p.viewport.Min.X += req.X
-			p.viewport.Max.X += req.X
-			p.viewport.Min.Y += req.Y
-			p.viewport.Max.Y += req.Y
+			p.shiftViewport(req.X, req.Y)
 			// Trigger local viewport update
 			select {
 			case updateViewport <- true:
