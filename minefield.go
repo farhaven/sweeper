@@ -186,27 +186,31 @@ const (
 	UncoverBoom
 )
 
-// Uncover reveals the field at location x, y. It returns an UncoverResult that indicates whether an explosion was triggered.
+// Uncover reveals the field at location x, y. It returns an UncoverResult that indicates whether an explosion was triggered and an
+// integer count of the number of fields that were revealed.
 //
 // If the uncovered field has no neighboring mines, it uses a flood-fill algorithm to uncover neighboring cells until a "border" of
 // mines is reached, or until the newly uncovered field is more than 30 fields distant from (x, y).
 //
 // Uncover locks m for writing.
-func (m *MineField) Uncover(x int, y int) UncoverResult {
+func (m *MineField) Uncover(x int, y int) (UncoverResult, uint) {
 	m.Lock()
 	defer m.Unlock()
 
 	point := image.Pt(x, y)
 
 	// Don't do anything if the location has already been uncovered. Marks are ignored.
-	_, uncovered := m.Uncovered[point]
-	if m.Triggered[point] || uncovered {
+	_, isUncovered := m.Uncovered[point]
+	if m.Triggered[point] || isUncovered {
 		log.Printf("not doing anything for %s", point)
-		return UncoverMiss
+		return UncoverMiss, 0
 	}
 
 	// Remove location from list of marked points
 	delete(m.Marks, point)
+
+	// Count of uncovered fields
+	numUncovered := uint(1)
 
 	// Handle click:
 	// - click on mine: game over
@@ -214,20 +218,20 @@ func (m *MineField) Uncover(x int, y int) UncoverResult {
 	if m.IsMineOnLocation(x, y) {
 		m.Triggered[point] = true
 		log.Println("BOOM", x, y)
-		return UncoverBoom
+		return UncoverBoom, numUncovered
 	}
 
 	mines := m.CountNeighboringMines(x, y)
 
 	// If there are no mines in the vicinity, uncover fields until a "border" of mines is reached.
 	if mines == 0 {
-		m.FloodFill(x, y)
+		numUncovered += m.FloodFill(x, y)
 	}
 
 	log.Printf("neighboring mines for x=%d, y=%d: %d", x, y, mines)
 	m.Uncovered[point] = mines
 
-	return UncoverMiss
+	return UncoverMiss, numUncovered
 }
 
 // Neighbors returns the 8 points around p.
@@ -253,7 +257,7 @@ func (m *MineField) Neighbors(p image.Point) [8]image.Point {
 }
 
 // FloodFill starts a flood filling operation centered on x and y, uncovering fields without mines for a limited radius
-func (m *MineField) FloodFill(x int, y int) {
+func (m *MineField) FloodFill(x int, y int) uint {
 	const maxRadius = 30 // Maximum uncovering distance
 
 	center := image.Pt(x, y)
@@ -263,6 +267,7 @@ func (m *MineField) FloodFill(x int, y int) {
 		return d
 	}
 
+	var numUncovered uint
 	alreadyHandled := make(map[image.Point]bool)
 	uncovered := make(map[image.Point]int)
 	unhandled := make(map[image.Point]bool)
@@ -298,8 +303,16 @@ func (m *MineField) FloodFill(x int, y int) {
 
 	// Mark all uncovered on the minefield
 	for pt, mines := range uncovered {
+		_, alreadyUncovered := m.Uncovered[pt]
+		if alreadyUncovered {
+			// Already uncovered by someone else
+			continue
+		}
+		numUncovered++
 		m.Uncovered[pt] = mines
 	}
+
+	return numUncovered
 }
 
 const _zoom = 32

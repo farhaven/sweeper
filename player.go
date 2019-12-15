@@ -55,11 +55,11 @@ func (p *Player) getScore() uint {
 	return p.score
 }
 
-func (p *Player) incScore() {
+func (p *Player) incScore(delta uint) {
 	p.Lock()
 	defer p.Unlock()
 
-	p.score += 1
+	p.score += delta
 }
 
 func (p *Player) resetScore() {
@@ -134,9 +134,9 @@ func (p *Player) Loop(conn *websocket.Conn) {
 			default:
 			}
 		case "uncover":
-			result := p.s.m.Uncover(p.mapViewport(req))
+			result, uncovered := p.s.m.Uncover(p.mapViewport(req))
 			if result != UncoverBoom {
-				p.incScore()
+				p.incScore(uncovered)
 			} else {
 				// TODO: Notify player with a "BOOM" message or something
 				p.resetScore()
