@@ -57,8 +57,6 @@ func NewViewPort(rect image.Rectangle) ViewPort {
 	return res
 }
 
-const _zoom = 32
-
 // IntToBytes converts x to a little endian byte slice
 func IntToBytes(val int64) []byte {
 	x := uint64(val + math.MinInt64)
@@ -90,14 +88,18 @@ type MineField struct {
 	Triggered map[image.Point]bool
 	// Map of Marks, i.e. flags and question Marks
 	Marks map[image.Point]Mark
+
+	// Path from which the minefield is read on restart and to which it is saved on changes
+	persistencePath string
 }
 
-func NewMineField(threshold uint32) (*MineField, error) {
+func NewMineField(threshold uint32, persistencePath string) (*MineField, error) {
 	m := MineField{
 		Density:   5,
 		Uncovered: make(map[image.Point]int),
 		Triggered: make(map[image.Point]bool),
 		Marks:     make(map[image.Point]Mark),
+		persistencePath: persistencePath,
 	}
 	_, err := rand.Read(m.Seed[:])
 	if err != nil {
@@ -165,6 +167,9 @@ func (m *MineField) CountNeighboringMines(x int, y int) int {
 	return mines
 }
 
+// Mark cycles the mark at location x, y between "None", "Questionable", "Flagged"
+//
+// It locks m for writing
 func (m *MineField) Mark(x int, y int) {
 	m.Lock()
 	defer m.Unlock()
@@ -174,17 +179,28 @@ func (m *MineField) Mark(x int, y int) {
 	m.Marks[pt] = (m.Marks[pt] + 1) % MarkMax
 }
 
-func (m *MineField) Uncover(x int, y int) {
+type UncoverResult int
+const (
+	UncoverMiss = iota
+	UncoverBoom
+)
+// Uncover reveals the field at location x, y. It returns an UncoverResult that indicates whether an explosion was triggered.
+//
+// If the uncovered field has no neighboring mines, it uses a flood-fill algorithm to uncover neighboring cells until a "border" of
+// mines is reached, or until the newly uncovered field is more than 30 fields distant from (x, y).
+//
+// Uncover locks m for writing.
+func (m *MineField) Uncover(x int, y int) UncoverResult {
 	m.Lock()
 	defer m.Unlock()
 
 	point := image.Pt(x, y)
 
-	// Don't do anything if the location has already been clicked on
+	// Don't do anything if the location has already been uncovered. Marks are ignored.
 	_, uncovered := m.Uncovered[point]
 	if m.Triggered[point] || uncovered {
 		log.Printf("not doing anything for %s", point)
-		return
+		return UncoverMiss
 	}
 
 	// Remove location from list of marked points
@@ -196,30 +212,40 @@ func (m *MineField) Uncover(x int, y int) {
 	if m.IsMineOnLocation(x, y) {
 		m.Triggered[point] = true
 		log.Println("BOOM", x, y)
-		return
+		return UncoverBoom
 	}
 
 	mines := m.CountNeighboringMines(x, y)
 
+	// If there are no mines in the vicinity, uncover fields until a "border" of mines is reached.
 	if mines == 0 {
 		m.FloodFill(x, y)
 	}
 
 	log.Printf("neighboring mines for x=%d, y=%d: %d", x, y, mines)
 	m.Uncovered[point] = mines
+
+	return UncoverMiss
 }
 
-func (m *MineField) Neighbors(p image.Point) []image.Point {
-	res := make([]image.Point, 0)
+// Neighbors returns the 8 points around p.
+func (m *MineField) Neighbors(p image.Point) [8]image.Point {
+	var (
+		res [8]image.Point
+		idx int
+	)
 
 	x, y := p.X, p.Y
 
 	// Add all neighbors with distance less than maxRadius to the new unhandled set
 	for xoff := -1; xoff <= 1; xoff++ {
-		res = append(res, image.Pt(x+xoff, y-1), image.Pt(x+xoff, y+1))
+		res[idx] = image.Pt(x+xoff, y-1)
+		res[idx+1] = image.Pt(x+xoff, y+1)
+		idx += 2
 	}
 
-	res = append(res, image.Pt(x-1, y), image.Pt(x+1, y))
+	res[idx] = image.Pt(x-1, y)
+	res[idx+1] = image.Pt(x+1, y)
 
 	return res
 }
@@ -240,7 +266,7 @@ func (m *MineField) FloodFill(x int, y int) {
 	unhandled := make(map[image.Point]bool)
 	unhandled[center] = true
 
-	log.Println("uncovering neighbors", uncovered)
+	log.Printf("uncovering neighbors of (%d, %d)", x, y)
 
 	for len(unhandled) != 0 {
 		// As long as there are points to handle, keep uncovering
@@ -274,8 +300,10 @@ func (m *MineField) FloodFill(x int, y int) {
 	}
 }
 
+const _zoom = 32
+
 // RenderToImage returns a gray scale image that represents the are of the mine field m as indicated by the rectangle. The returned
-// image is zoomed by a factor of 4. That is, the image is four times as wide and four times as high as rect.
+// image is zoomed by a factor of 32. That is, the image is four times as wide and four times as high as rect.
 func (m *MineField) RenderToImage(rect image.Rectangle) image.Image {
 	img := image.NewGray(image.Rect(rect.Min.X*_zoom, rect.Min.Y*_zoom, rect.Max.X*_zoom, rect.Max.Y*_zoom))
 	grid := image.Uniform{color.Black}
