@@ -21,14 +21,14 @@ type Server struct {
 	sync.RWMutex
 	m              *MineField
 	updateChannels map[chan bool]bool
-	players map[*Player]bool
+	players        map[*Player]bool
 }
 
 func NewServer(m *MineField) *Server {
 	return &Server{
 		m:              m,
 		updateChannels: make(map[chan bool]bool),
-		players: make(map[*Player]bool),
+		players:        make(map[*Player]bool),
 	}
 }
 

@@ -94,7 +94,7 @@ func (p *Player) Loop(conn *websocket.Conn) {
 			}
 			err = enc.Encode(update)
 			if err != nil {
-				log.Println("Can't encode field:", err)
+				log.Println("Can't encode update:", err)
 				wr.Close()
 				return
 			}
