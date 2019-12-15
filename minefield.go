@@ -95,10 +95,10 @@ type MineField struct {
 
 func NewMineField(threshold uint32, persistencePath string) (*MineField, error) {
 	m := MineField{
-		Density:   5,
-		Uncovered: make(map[image.Point]int),
-		Triggered: make(map[image.Point]bool),
-		Marks:     make(map[image.Point]Mark),
+		Density:         5,
+		Uncovered:       make(map[image.Point]int),
+		Triggered:       make(map[image.Point]bool),
+		Marks:           make(map[image.Point]Mark),
 		persistencePath: persistencePath,
 	}
 	_, err := rand.Read(m.Seed[:])
@@ -180,10 +180,12 @@ func (m *MineField) Mark(x int, y int) {
 }
 
 type UncoverResult int
+
 const (
 	UncoverMiss = iota
 	UncoverBoom
 )
+
 // Uncover reveals the field at location x, y. It returns an UncoverResult that indicates whether an explosion was triggered.
 //
 // If the uncovered field has no neighboring mines, it uses a flood-fill algorithm to uncover neighboring cells until a "border" of

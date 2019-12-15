@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"image"
 	"io"
@@ -70,78 +69,8 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	// - send initial viewport
-	viewport := image.Rect(-_viewPortWidth/2, -_viewPortHeight/2, _viewPortWidth/2, _viewPortHeight/2)
-	updateViewport := make(chan bool)
-	s.AddUpdateChannel(updateViewport)
-	defer s.RemoveUpdateChannel(updateViewport)
-	defer close(updateViewport)
-	go func() {
-		for range updateViewport {
-			wr, err := conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				log.Println("can't get writer for websocket:", err)
-				return
-			}
-			enc := json.NewEncoder(wr)
-			err = enc.Encode(s.m.ExtractPlayerView(viewport))
-			if err != nil {
-				log.Println("Can't encode field:", err)
-				wr.Close()
-				return
-			}
-			wr.Close()
-		}
-	}()
-	// immediately trigger update
-	updateViewport <- true
-
-	// TODO:
-	// - send events to user:
-	//   - game over (someone clicked on a mine)
-
-	for {
-		messageType, r, err := conn.NextReader()
-		if err != nil {
-			return
-		}
-		log.Println("got message of type", messageType)
-		var req ClientRequest
-		dec := json.NewDecoder(r)
-		err = dec.Decode(&req)
-		if err != nil {
-			log.Printf("Can't decode client request: %s", err)
-		}
-		log.Printf("got client request %#v", req)
-
-		// - handle user requests:
-		//   - move viewport
-		//   - click on field
-		switch req.Kind {
-		case "move":
-			viewport.Min.X += req.X
-			viewport.Max.X += req.X
-			viewport.Min.Y += req.Y
-			viewport.Max.Y += req.Y
-			// Trigger local viewport update
-			select {
-			case updateViewport <- true:
-			default:
-			}
-		case "uncover":
-			s.m.Uncover(viewport.Min.X+req.X, viewport.Min.Y+req.Y)
-			// TODO: Only trigger updates in overlapping viewports
-			s.TriggerGlobalUpdate()
-		case "mark":
-			log.Println("mark request", req)
-			// TODO: Only trigger updates in overlapping viewports
-			s.m.Mark(viewport.Min.X+req.X, viewport.Min.Y+req.Y)
-			s.TriggerGlobalUpdate()
-		default:
-			log.Printf("invalid request: %#v", req)
-			return
-		}
-	}
+	p := Player{s}
+	p.Loop(conn)
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +96,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	m, err := NewMineField(4)
+	m, err := NewMineField(4, "minefield.json")
 	if err != nil {
 		log.Fatalln("can't create mine field:", err)
 	}
