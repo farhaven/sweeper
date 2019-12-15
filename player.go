@@ -30,6 +30,12 @@ func NewPlayer(s *Server) *Player {
 	}
 }
 
+func (p *Player) mapViewport(req ClientRequest) (int, int) {
+	p.RLock()
+	defer p.RUnlock()
+
+	return p.viewport.Min.X + req.X, p.viewport.Min.Y + req.Y
+}
 
 func (p *Player) shiftViewport(deltaX int, deltaY int) {
 	p.Lock()
@@ -96,13 +102,13 @@ func (p *Player) Loop(conn *websocket.Conn) {
 			default:
 			}
 		case "uncover":
-			p.s.m.Uncover(p.viewport.Min.X+req.X, p.viewport.Min.Y+req.Y)
+			p.s.m.Uncover(p.mapViewport(req))
 			// TODO: Only trigger updates in overlapping viewports
 			p.s.TriggerGlobalUpdate()
 		case "mark":
 			log.Println("mark request", req)
 			// TODO: Only trigger updates in overlapping viewports
-			p.s.m.Mark(p.viewport.Min.X+req.X, p.viewport.Min.Y+req.Y)
+			p.s.m.Mark(p.mapViewport(req))
 			p.s.TriggerGlobalUpdate()
 		default:
 			log.Printf("invalid request: %#v", req)
