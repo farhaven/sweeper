@@ -113,7 +113,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	m, err := NewMineField(4, "minefield.json")
+	m, err := NewMineField(4, "minefield.gob")
 	if err != nil {
 		log.Fatalln("can't create mine field:", err)
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"hash/fnv"
 	"image"
@@ -9,6 +10,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"os"
 	"sync"
 )
 
@@ -79,7 +81,11 @@ const (
 )
 
 type MineField struct {
-	sync.RWMutex
+	mu sync.RWMutex
+
+	// Path from which the minefield is read on restart and to which it is saved on changes
+	persistencePath string
+
 	Seed    [16]byte
 	Density uint32
 	// Map of coordinates to neighboring mine count
@@ -88,24 +94,61 @@ type MineField struct {
 	Triggered map[image.Point]bool
 	// Map of Marks, i.e. flags and question Marks
 	Marks map[image.Point]Mark
-
-	// Path from which the minefield is read on restart and to which it is saved on changes
-	persistencePath string
 }
 
 func NewMineField(threshold uint32, persistencePath string) (*MineField, error) {
-	m := MineField{
-		Density:         5,
-		Uncovered:       make(map[image.Point]int),
-		Triggered:       make(map[image.Point]bool),
-		Marks:           make(map[image.Point]Mark),
-		persistencePath: persistencePath,
-	}
-	_, err := rand.Read(m.Seed[:])
+	fh, err := os.Open(persistencePath)
 	if err != nil {
-		return nil, err
+		log.Printf("can't open minefield %s: %s, creating new field", persistencePath, err)
+
+		m := MineField{
+			Density:         5,
+			Uncovered:       make(map[image.Point]int),
+			Triggered:       make(map[image.Point]bool),
+			Marks:           make(map[image.Point]Mark),
+			persistencePath: persistencePath,
+		}
+		_, err = rand.Read(m.Seed[:])
+		if err != nil {
+			return nil, err
+		}
+		return &m, nil
+	}
+	defer fh.Close()
+
+	var m MineField
+	dec := gob.NewDecoder(fh)
+	err = dec.Decode(&m)
+	if err != nil {
+		return nil, fmt.Errorf("can't load minefield: %w", err)
 	}
 	return &m, nil
+}
+
+func (m *MineField) Persist() error {
+	log.Println("persisting minefield")
+
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	log.Println("locked")
+
+	fh, err := os.Create(m.persistencePath)
+	if err != nil {
+		return err
+	}
+	defer fh.Close()
+
+	log.Println("file created")
+
+	encoder := gob.NewEncoder(fh)
+	err = encoder.Encode(m)
+	if err != nil {
+		return err
+	}
+
+	log.Println("minefield written")
+	return nil
 }
 
 // IsMineOnLocation returns true if there is a mine in the location indicated by x and y.
@@ -123,8 +166,8 @@ func (m *MineField) IsMineOnLocation(x, y int) bool {
 func (m *MineField) ExtractPlayerView(viewport image.Rectangle) ViewPort {
 	res := NewViewPort(viewport)
 
-	m.RLock()
-	defer m.RUnlock()
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 
 	for y := viewport.Min.Y; y < viewport.Max.Y; y++ {
 		// Translate viewport y to array index
@@ -171,8 +214,8 @@ func (m *MineField) CountNeighboringMines(x int, y int) int {
 //
 // It locks m for writing
 func (m *MineField) Mark(x int, y int) {
-	m.Lock()
-	defer m.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	// Only set marks on fields that have not been uncovered or triggered
 	pt := image.Pt(x, y)
@@ -194,8 +237,8 @@ const (
 //
 // Uncover locks m for writing.
 func (m *MineField) Uncover(x int, y int) (UncoverResult, uint) {
-	m.Lock()
-	defer m.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	point := image.Pt(x, y)
 

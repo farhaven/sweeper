@@ -160,12 +160,20 @@ func (p *Player) Loop(conn *websocket.Conn) {
 				// TODO: Notify player with a "BOOM" message or something
 				p.resetScore()
 			}
+			err = p.s.m.Persist()
+			if err != nil {
+				log.Println("can't persist minefield:", err)
+			}
 			// TODO: Only trigger updates in overlapping viewports
 			p.s.TriggerGlobalUpdate()
 		case "mark":
 			log.Println("mark request", req)
 			// TODO: Only trigger updates in overlapping viewports
 			p.s.m.Mark(p.mapViewport(req))
+			err = p.s.m.Persist()
+			if err != nil {
+				log.Println("can't persist minefield:", err)
+			}
 			p.s.TriggerGlobalUpdate()
 		default:
 			log.Printf("invalid request: %#v", req)
