@@ -21,6 +21,7 @@ type Player struct {
 	sync.RWMutex
 	s        *Server
 	viewport image.Rectangle
+	score    uint
 }
 
 func NewPlayer(s *Server) *Player {
@@ -47,6 +48,33 @@ func (p *Player) shiftViewport(deltaX int, deltaY int) {
 	p.viewport.Max.Y += deltaY
 }
 
+func (p *Player) getScore() uint {
+	p.RLock()
+	defer p.RUnlock()
+
+	return p.score
+}
+
+func (p *Player) incScore() {
+	p.Lock()
+	defer p.Unlock()
+
+	p.score += 1
+}
+
+func (p *Player) resetScore() {
+	p.Lock()
+	defer p.Unlock()
+
+	p.score = 0
+}
+
+// A state update contains the current score and the rendered viewpoint of a player
+type StateUpdate struct {
+	Score    uint
+	ViewPort ViewPort
+}
+
 func (p *Player) Loop(conn *websocket.Conn) {
 	updateViewport := make(chan bool)
 	p.s.AddUpdateChannel(updateViewport)
@@ -60,7 +88,11 @@ func (p *Player) Loop(conn *websocket.Conn) {
 				return
 			}
 			enc := json.NewEncoder(wr)
-			err = enc.Encode(p.s.m.ExtractPlayerView(p.viewport))
+			update := StateUpdate{
+				Score:    p.getScore(),
+				ViewPort: p.s.m.ExtractPlayerView(p.viewport),
+			}
+			err = enc.Encode(update)
 			if err != nil {
 				log.Println("Can't encode field:", err)
 				wr.Close()
@@ -102,7 +134,13 @@ func (p *Player) Loop(conn *websocket.Conn) {
 			default:
 			}
 		case "uncover":
-			p.s.m.Uncover(p.mapViewport(req))
+			result := p.s.m.Uncover(p.mapViewport(req))
+			if result != UncoverBoom {
+				p.incScore()
+			} else {
+				// TODO: Notify player with a "BOOM" message or something
+				p.resetScore()
+			}
 			// TODO: Only trigger updates in overlapping viewports
 			p.s.TriggerGlobalUpdate()
 		case "mark":

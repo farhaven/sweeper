@@ -14,17 +14,17 @@ function handleMessage(socketMessage) {
 
 	// Update position display
 	var locSpan = document.getElementById("location")
-	locSpan.innerText = JSON.stringify(message.Position);
+	locSpan.innerText = message.Score + " @ " + JSON.stringify(message.ViewPort.Position);
 
-	for (y = 0; y < message.Data.length; y++) {
-		for (x = 0; x < message.Data[y].length; x++) {
+	for (y = 0; y < message.ViewPort.Data.length; y++) {
+		for (x = 0; x < message.ViewPort.Data[y].length; x++) {
 			var fe = document.getElementById("field-" + y + "-" + x);
 			fe.classList.remove("flag");
 			fe.classList.remove("boom");
 			fe.classList.remove("dim");
 			fe.classList.remove("mark");
 			fe.classList.remove("number");
-			fe.innerText = String.fromCharCode(message.Data[y][x]);
+			fe.innerText = String.fromCharCode(message.ViewPort.Data[y][x]);
 			switch (fe.innerText) {
 				case "P":
 					fe.classList.add("flag");
