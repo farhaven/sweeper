@@ -22,6 +22,29 @@ type Server struct {
 	sync.RWMutex
 	m              *MineField
 	updateChannels map[chan bool]bool
+	players map[*Player]bool
+}
+
+func NewServer(m *MineField) *Server {
+	return &Server{
+		m:              m,
+		updateChannels: make(map[chan bool]bool),
+		players: make(map[*Player]bool),
+	}
+}
+
+func (s *Server) AddPlayer(p *Player) {
+	s.Lock()
+	defer s.Unlock()
+
+	s.players[p] = true
+}
+
+func (s *Server) RemovePlayer(p *Player) {
+	s.Lock()
+	defer s.Unlock()
+
+	delete(s.players, p)
 }
 
 func (s *Server) AddUpdateChannel(ch chan bool) {
@@ -60,6 +83,9 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	p := NewPlayer(s)
+	s.AddPlayer(p)
+	defer s.RemovePlayer(p)
+
 	log.Println("running loop for player", p)
 	p.Loop(conn)
 	log.Println("player", p, "disconnected")
