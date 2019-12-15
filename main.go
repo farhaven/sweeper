@@ -51,8 +51,6 @@ func (s *Server) TriggerGlobalUpdate() {
 }
 
 func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Got new websocket request")
-
 	// - upgrade websocket
 	conn, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -62,7 +60,9 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	p := NewPlayer(s)
+	log.Println("running loop for player", p)
 	p.Loop(conn)
+	log.Println("player", p, "disconnected")
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -93,20 +93,9 @@ func main() {
 		log.Fatalln("can't create mine field:", err)
 	}
 
-	rect := image.Rect(-10, -10, 10, 10)
-	field := m.ExtractPlayerView(rect)
-
-	for _, row := range field.Data {
-		log.Println(row)
-	}
-
-	s := Server{
-		m:              m,
-		updateChannels: make(map[chan bool]bool),
-	}
-
 	log.Println("Registering HTTP handlers")
 
+	s := NewServer(m)
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/ws", s.wsHandler)
 
