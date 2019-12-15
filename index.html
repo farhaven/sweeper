@@ -196,15 +196,25 @@ function setup() {
 		#field {
 			font-size: 220%;
 			padding-top: 1em;
+			cursor: pointer;
 		}
 		#location {
 			font-family: monospace;
 		}
 		#menu {
-			top: 0;
-			right: 0;
-			position: absolute;
-			padding-right: 2em;
+			border: 1px solid black;
+			width: max-content;
+			height: max-content;
+			margin-top: 1em;
+		}
+		ul {
+			display: flex;
+			padding-left: 0;
+			margin: 0;
+			cursor: pointer;
+		}
+		li:hover {
+			background: #ccc;
 		}
 		li {
 			font-size: 200%;
@@ -214,17 +224,48 @@ function setup() {
 		li.active {
 			background: #28d;
 		}
+		#sidebar {
+			max-width: 40em;
+			padding-left: 1em;
+			padding-right: 1em;
+		}
+		body {
+			display: flex;
+		}
 		</style>
 	</head>
 	<body>
-		<span id="location"><!-- filled async --></span>
-		<div id="field">
+		<div>
+			<span id="location"><!-- filled async --></span>
+			<div id="field"></div>
+			<div id="menu">
+				<ul>
+					<li class="active" id="mode-mark">Mark</li>
+					<li id="mode-uncover">Uncover</li>
+				</ul>
+			</div>
 		</div>
-		<div id="menu">
-			<ul>
-				<li class="active" id="mode-mark">Mark</li>
-				<li id="mode-uncover">Uncover</li>
-			</ul>
+		<div id="sidebar">
+			<h1>What's this?</h1>
+			<p>You're playing minesweeper on an infinite grid, together with other people. There is no game over. If you trigger a
+			mine, your score resets to zero. Uncovering non-mined fields increases the score.
+			<p>If you reload this page, your score is also reset to zero, and you're teleported back to the origin of the grid at
+			<code>(0, 0)</code>.
+			<p>Scroll with the arrow keys.
+			<p>Select the what clicking the field does below the field:
+			<dl>
+				<dt>Mark</dt>
+				<dd>A click toggles the field between three states: <em>Nothing</em>, <em>Flagged</em> (P) or <em>Unknown</em> (?)</dd>
+				<dt>Uncover</dt>
+				<dd>
+				Uncovers the clicked field. If it is a mine, your score resets to zero.
+				<p>Otherwise, it turns into a number that describes how many mines are in the 8 adjoining fields. If that number is zero,
+				neighboring fields are uncovered until a "border" of mines is hit.
+				<p>Each uncovered square increases your score by one.
+				</dd>
+			</dl>
+			<p>This is a work in progress. Things may change. If you have cool ideas, drop me an email:
+			<a href="mailto:gbe@unobtanium.de">gbe@unobtanium.de</a>
 		</div>
 		<script>setup();</script>
 	</body>
