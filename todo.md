@@ -14,9 +14,6 @@
 - build
 
 ## Backend
-- handle more requests:
-	- place flag
-	- place 'unknown' marker
 - only send viewport updates to overlapping viewports
 	- also consider 30 units uncovering radius for flood fills
 
