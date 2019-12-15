@@ -73,8 +73,8 @@ type Mark int
 
 const (
 	MarkNone = iota
-	MarkQuestion
 	MarkFlag
+	MarkQuestion
 	MarkMax // Not a real value, only used for cycling through marks
 )
 
