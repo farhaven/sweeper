@@ -23,7 +23,7 @@ var websocketUpgrader = websocket.Upgrader{
 }
 
 type ClientRequest struct {
-	Kind string // kind of request: 'move' or 'uncover'
+	Kind string // kind of request: 'move', 'uncover', 'mark'
 	X, Y int    // parameters: deltaX, deltaY for move, X and Y relative to viewport for click
 }
 
@@ -117,8 +117,6 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 		// - handle user requests:
 		//   - move viewport
 		//   - click on field
-		// TODO:
-		// - add a way to place flags (P) and unknown (?) markers
 		switch req.Kind {
 		case "move":
 			viewport.Min.X += req.X
@@ -168,10 +166,6 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, fh)
 }
 
-/*
-- Render field
-- Build flood fill, up to a certain maximum radius
-*/
 func main() {
 	m, err := NewMineField(4)
 	if err != nil {
@@ -184,8 +178,6 @@ func main() {
 	for _, row := range field.Data {
 		log.Println(row)
 	}
-
-	// os.Exit(0)
 
 	s := Server{
 		m:              m,

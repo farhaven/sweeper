@@ -82,24 +82,24 @@ const (
 
 type MineField struct {
 	sync.RWMutex
-	seed      [16]byte
-	threshold uint32
+	Seed    [16]byte
+	Density uint32
 	// Map of coordinates to neighboring mine count
-	uncovered map[image.Point]int
-	// Map of triggered mines
-	triggered map[image.Point]bool
-	// Map of marks, i.e. flags and question marks
-	marks map[image.Point]Mark
+	Uncovered map[image.Point]int
+	// Map of Triggered mines
+	Triggered map[image.Point]bool
+	// Map of Marks, i.e. flags and question Marks
+	Marks map[image.Point]Mark
 }
 
 func NewMineField(threshold uint32) (*MineField, error) {
 	m := MineField{
-		threshold: 5,
-		uncovered: make(map[image.Point]int),
-		triggered: make(map[image.Point]bool),
-		marks:     make(map[image.Point]Mark),
+		Density:   5,
+		Uncovered: make(map[image.Point]int),
+		Triggered: make(map[image.Point]bool),
+		Marks:     make(map[image.Point]Mark),
 	}
-	_, err := rand.Read(m.seed[:])
+	_, err := rand.Read(m.Seed[:])
 	if err != nil {
 		return nil, err
 	}
@@ -110,10 +110,10 @@ func NewMineField(threshold uint32) (*MineField, error) {
 func (m *MineField) IsMineOnLocation(x, y int) bool {
 	// Determine wether x, y contains a mine by hashing it with the seed and checking whether it's less than a threshold
 	h := fnv.New32()
-	h.Write(m.seed[:])
+	h.Write(m.Seed[:])
 	h.Write(IntToBytes(int64(x)))
 	h.Write(IntToBytes(int64(y)))
-	return (h.Sum32() % m.threshold) == 0
+	return (h.Sum32() % m.Density) == 0
 }
 
 // ExtractPlayerView returns a 2 dimensional array describing a players view of the field using the provided rectangle as a view
@@ -132,10 +132,10 @@ func (m *MineField) ExtractPlayerView(viewport image.Rectangle) ViewPort {
 			ax := x - viewport.Min.X
 
 			pt := image.Pt(x, y)
-			if m.IsMineOnLocation(x, y) && m.triggered[pt] {
+			if m.IsMineOnLocation(x, y) && m.Triggered[pt] {
 				res.Data[ay][ax] = VPEMine
-			} else if m.marks[pt] != MarkNone {
-				if m.marks[pt] == MarkQuestion {
+			} else if m.Marks[pt] != MarkNone {
+				if m.Marks[pt] == MarkQuestion {
 					res.Data[ay][ax] = VPEMaybe
 				} else {
 					res.Data[ay][ax] = VPEFlag
@@ -144,7 +144,7 @@ func (m *MineField) ExtractPlayerView(viewport image.Rectangle) ViewPort {
 				res.Data[ay][ax] = VPENone
 			}
 
-			mines, ok := m.uncovered[image.Pt(x, y)]
+			mines, ok := m.Uncovered[image.Pt(x, y)]
 			if ok {
 				res.Data[ay][ax] = ViewPortElement('0' + mines)
 			}
@@ -171,7 +171,7 @@ func (m *MineField) Mark(x int, y int) {
 
 	// Only set marks on fields that have not been uncovered or triggered
 	pt := image.Pt(x, y)
-	m.marks[pt] = (m.marks[pt] + 1) % MarkMax
+	m.Marks[pt] = (m.Marks[pt] + 1) % MarkMax
 }
 
 func (m *MineField) Uncover(x int, y int) {
@@ -181,20 +181,20 @@ func (m *MineField) Uncover(x int, y int) {
 	point := image.Pt(x, y)
 
 	// Don't do anything if the location has already been clicked on
-	_, uncovered := m.uncovered[point]
-	if m.triggered[point] || uncovered {
+	_, uncovered := m.Uncovered[point]
+	if m.Triggered[point] || uncovered {
 		log.Printf("not doing anything for %s", point)
 		return
 	}
 
 	// Remove location from list of marked points
-	delete(m.marks, point)
+	delete(m.Marks, point)
 
 	// Handle click:
 	// - click on mine: game over
 	// - click on empty field: count mines in 8 neighboring fields, set value
 	if m.IsMineOnLocation(x, y) {
-		m.triggered[point] = true
+		m.Triggered[point] = true
 		log.Println("BOOM", x, y)
 		return
 	}
@@ -206,7 +206,7 @@ func (m *MineField) Uncover(x int, y int) {
 	}
 
 	log.Printf("neighboring mines for x=%d, y=%d: %d", x, y, mines)
-	m.uncovered[point] = mines
+	m.Uncovered[point] = mines
 }
 
 func (m *MineField) Neighbors(p image.Point) []image.Point {
@@ -270,7 +270,7 @@ func (m *MineField) FloodFill(x int, y int) {
 
 	// Mark all uncovered on the minefield
 	for pt, mines := range uncovered {
-		m.uncovered[pt] = mines
+		m.Uncovered[pt] = mines
 	}
 }
 
