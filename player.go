@@ -8,6 +8,14 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type ClientRequest struct {
+	Kind string // kind of request: 'move', 'uncover', 'mark'
+	X, Y int    // parameters: deltaX, deltaY for move, X and Y relative to viewport for click
+}
+
+const _viewPortWidth = 20
+const _viewPortHeight = 20
+
 type Player struct {
 	s        *Server
 	viewport image.Rectangle

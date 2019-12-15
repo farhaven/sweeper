@@ -13,17 +13,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const _viewPortWidth = 20
-const _viewPortHeight = 20
-
 var websocketUpgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-}
-
-type ClientRequest struct {
-	Kind string // kind of request: 'move', 'uncover', 'mark'
-	X, Y int    // parameters: deltaX, deltaY for move, X and Y relative to viewport for click
 }
 
 type Server struct {
