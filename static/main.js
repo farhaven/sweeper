@@ -11,14 +11,19 @@ function handleMessage(socketMessage) {
 	var locSpan = document.getElementById("location")
 	locSpan.innerText = message.Score + " @ " + JSON.stringify(message.ViewPort.Position);
 
+	// Update field display
 	for (y = 0; y < message.ViewPort.Data.length; y++) {
 		for (x = 0; x < message.ViewPort.Data[y].length; x++) {
 			var fe = document.getElementById("field-" + y + "-" + x);
+
+			// Reset classes...
 			fe.classList.remove("flag");
 			fe.classList.remove("boom");
 			fe.classList.remove("dim");
 			fe.classList.remove("mark");
 			fe.classList.remove("number");
+
+			// ... and set proper classes from the new text
 			fe.innerText = String.fromCharCode(message.ViewPort.Data[y][x]);
 			switch (fe.innerText) {
 				case "P":
@@ -124,7 +129,7 @@ function setup() {
 		ws.send(JSON.stringify(request));
 	})
 
-
+	// Mode switcher
 	var mode = "mark";
 
 	var field = document.getElementById("field");
