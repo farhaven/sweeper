@@ -127,7 +127,7 @@ func main() {
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/ws", s.wsHandler)
 
-	log.Println("HTTP handler set up")
+	log.Println("HTTP handler set up, listening on port 8080")
 
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
