@@ -97,32 +97,32 @@ type MineField struct {
 }
 
 func NewMineField(threshold uint32, persistencePath string) (*MineField, error) {
+	m := &MineField{
+		Density:         5,
+		Uncovered:       make(map[image.Point]int),
+		Triggered:       make(map[image.Point]bool),
+		Marks:           make(map[image.Point]Mark),
+		persistencePath: persistencePath,
+	}
+
 	fh, err := os.Open(persistencePath)
 	if err != nil {
-		log.Printf("can't open minefield %s: %s, creating new field", persistencePath, err)
+		log.Printf("can't load mine field, using fresh field:", err)
 
-		m := MineField{
-			Density:         5,
-			Uncovered:       make(map[image.Point]int),
-			Triggered:       make(map[image.Point]bool),
-			Marks:           make(map[image.Point]Mark),
-			persistencePath: persistencePath,
-		}
 		_, err = rand.Read(m.Seed[:])
 		if err != nil {
 			return nil, err
 		}
-		return &m, nil
+		return m, nil
 	}
 	defer fh.Close()
 
-	var m MineField
 	dec := gob.NewDecoder(fh)
-	err = dec.Decode(&m)
+	err = dec.Decode(m)
 	if err != nil {
 		return nil, fmt.Errorf("can't load minefield: %w", err)
 	}
-	return &m, nil
+	return m, nil
 }
 
 func (m *MineField) Persist() error {

@@ -38,7 +38,7 @@ func NewPlayer(s *Server, id string) *Player {
 }
 
 func (p *Player) String() string {
-	return fmt.Sprintf("%s@%s", p.Id, p.Viewport)
+	return fmt.Sprintf("%s@%s/%d", p.Id, p.Viewport, p.Score)
 }
 
 func (p *Player) setServer(s *Server) {
@@ -182,6 +182,10 @@ func (p *Player) Loop(conn *websocket.Conn) {
 			err = p.s.m.Persist()
 			if err != nil {
 				log.Println("can't persist minefield:", err)
+			}
+			err = p.s.Persist()
+			if err != nil {
+				log.Println("can't persist player list:", err)
 			}
 			// TODO: Only trigger updates in overlapping viewports
 			p.s.TriggerGlobalUpdate()

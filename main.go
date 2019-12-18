@@ -62,7 +62,10 @@ func main() {
 
 	log.Println("Registering HTTP handlers")
 
-	s := NewServer(m, "server.gob")
+	s, err := NewServer(m, "server.gob")
+	if err != nil {
+		log.Fatalln("can't create server:", err)
+	}
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/ws", s.wsHandler)
 
