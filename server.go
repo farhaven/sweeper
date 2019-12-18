@@ -9,8 +9,8 @@ import (
 )
 
 type Server struct {
-	sync.RWMutex
-	m *MineField
+	mu sync.RWMutex
+	m  *MineField
 
 	// trigger channels for updating currently connected players
 	updateChannels map[chan bool]bool
@@ -30,8 +30,8 @@ func NewServer(m *MineField) *Server {
 // AddPlayer creates a new player for the given ID and returns it. If there is already a player with that ID, it is
 // used instead of creating a new player object.
 func (s *Server) AddPlayer(id string) *Player {
-	s.Lock()
-	defer s.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	p, ok := s.players[id]
 	if ok {
@@ -43,22 +43,22 @@ func (s *Server) AddPlayer(id string) *Player {
 }
 
 func (s *Server) AddUpdateChannel(ch chan bool) {
-	s.Lock()
-	defer s.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	s.updateChannels[ch] = true
 }
 
 func (s *Server) RemoveUpdateChannel(ch chan bool) {
-	s.Lock()
-	defer s.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	delete(s.updateChannels, ch)
 }
 
 func (s *Server) TriggerGlobalUpdate() {
-	s.RLock()
-	defer s.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	for ch := range s.updateChannels {
 		select {
