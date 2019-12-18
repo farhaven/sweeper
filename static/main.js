@@ -5,7 +5,6 @@ let viewport = {
 
 function handleMessage(socketMessage) {
 	var message = JSON.parse(socketMessage.data);
-	console.log("got a new message", message);
 
 	// Update position display
 	var locSpan = document.getElementById("location")
