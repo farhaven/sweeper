@@ -1,0 +1,69 @@
+.fieldElement {
+	width: 1em;
+	height: 1em;
+	min-width: 1em;
+	max-width: 1em;
+	min-height: 1em;
+	max-height: 1em;
+	border: 1px solid black;
+	font-family: monospace;
+	text-align: center;
+}
+.flag {
+	color: darkred;
+}
+.mark {
+	color: darkblue;
+}
+.boom {
+	color: red;
+	background: black;
+}
+.dim {
+	color: #bbb;
+}
+.number {
+	color: #666;
+}
+.fieldRow {
+	display: flex;
+}
+#field {
+	font-size: 220%;
+	padding-top: 1em;
+	cursor: pointer;
+}
+#location {
+	font-family: monospace;
+}
+#menu {
+	border: 1px solid black;
+	width: max-content;
+	height: max-content;
+	margin-top: 1em;
+}
+ul {
+	display: flex;
+	padding-left: 0;
+	margin: 0;
+	cursor: pointer;
+}
+li:hover {
+	background: #ccc;
+}
+li {
+	font-size: 200%;
+	list-style: none;
+	padding: 1em;
+}
+li.active {
+	background: #28d;
+}
+#sidebar {
+	max-width: 40em;
+	padding-left: 1em;
+	padding-right: 1em;
+}
+body {
+	display: flex;
+}
