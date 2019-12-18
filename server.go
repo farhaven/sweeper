@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/gob"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/google/uuid"
@@ -12,19 +14,44 @@ type Server struct {
 	mu sync.RWMutex
 	m  *MineField
 
+	persistencePath string
+
 	// trigger channels for updating currently connected players
 	updateChannels map[chan bool]bool
 
-	// currently active players, or players that have not been gone for too long
-	players map[string]*Player
+	// currently active Players, or Players that have not been gone for too long
+	Players map[string]*Player
 }
 
-func NewServer(m *MineField) *Server {
+func NewServer(m *MineField, persistencePath string) *Server {
 	return &Server{
-		m:              m,
-		updateChannels: make(map[chan bool]bool),
-		players:        make(map[string]*Player),
+		m:               m,
+		persistencePath: persistencePath,
+		updateChannels:  make(map[chan bool]bool),
+		Players:         make(map[string]*Player),
 	}
+}
+
+func (s *Server) Persist() error {
+	log.Println("persisting player list")
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	fh, err := os.Create(s.persistencePath)
+	if err != nil {
+		return err
+	}
+	defer fh.Close()
+
+	encoder := gob.NewEncoder(fh)
+	err = encoder.Encode(s.Players)
+	if err != nil {
+		return err
+	}
+
+	log.Println("player list persisted")
+	return nil
 }
 
 // AddPlayer creates a new player for the given ID and returns it. If there is already a player with that ID, it is
@@ -33,13 +60,13 @@ func (s *Server) AddPlayer(id string) *Player {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	p, ok := s.players[id]
+	p, ok := s.Players[id]
 	if ok {
 		return p
 	}
 
-	s.players[id] = NewPlayer(s, id)
-	return s.players[id]
+	s.Players[id] = NewPlayer(s, id)
+	return s.Players[id]
 }
 
 func (s *Server) AddUpdateChannel(ch chan bool) {

@@ -62,7 +62,7 @@ func main() {
 
 	log.Println("Registering HTTP handlers")
 
-	s := NewServer(m)
+	s := NewServer(m, "server.gob")
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/ws", s.wsHandler)
 

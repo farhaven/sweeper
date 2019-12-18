@@ -21,62 +21,69 @@ const _viewPortWidth = 20
 const _viewPortHeight = 20
 
 type Player struct {
-	sync.RWMutex
+	mu       sync.RWMutex
 	s        *Server
-	viewport image.Rectangle
-	score    uint
-	id       string
+	Viewport image.Rectangle
+	Score    uint
+	Id       string
 }
 
 func NewPlayer(s *Server, id string) *Player {
 	log.Println("Player with ID", id, "connected")
 	return &Player{
 		s:        s,
-		viewport: image.Rect(-_viewPortWidth/2, -_viewPortHeight/2, _viewPortWidth/2, _viewPortHeight/2),
-		id:       id,
+		Viewport: image.Rect(-_viewPortWidth/2, -_viewPortHeight/2, _viewPortWidth/2, _viewPortHeight/2),
+		Id:       id,
 	}
 }
 
 func (p *Player) String() string {
-	return fmt.Sprintf("%s@%s", p.id, p.viewport)
+	return fmt.Sprintf("%s@%s", p.Id, p.Viewport)
+}
+
+func (p *Player) setServer(s *Server) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	p.s = s
 }
 
 func (p *Player) mapViewport(req ClientRequest) (int, int) {
-	p.RLock()
-	defer p.RUnlock()
+	p.mu.RLock()
+	defer p.mu.RUnlock()
 
-	return p.viewport.Min.X + req.X, p.viewport.Min.Y + req.Y
+	return p.Viewport.Min.X + req.X, p.Viewport.Min.Y + req.Y
 }
 
 func (p *Player) shiftViewport(deltaX int, deltaY int) {
-	p.Lock()
-	defer p.Unlock()
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
-	p.viewport.Min.X += deltaX
-	p.viewport.Max.X += deltaX
-	p.viewport.Min.Y += deltaY
-	p.viewport.Max.Y += deltaY
+	p.Viewport.Min.X += deltaX
+	p.Viewport.Max.X += deltaX
+	p.Viewport.Min.Y += deltaY
+	p.Viewport.Max.Y += deltaY
 }
 
 func (p *Player) getScore() uint {
-	p.RLock()
-	defer p.RUnlock()
+	p.mu.RLock()
+	defer p.mu.RUnlock()
 
-	return p.score
+	return p.Score
 }
 
 func (p *Player) incScore(delta uint) {
-	p.Lock()
-	defer p.Unlock()
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
-	p.score += delta
+	p.Score += delta
 }
 
 func (p *Player) resetScore() {
-	p.Lock()
-	defer p.Unlock()
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
-	p.score = 0
+	p.Score = 0
 }
 
 // A state update contains the current score and the rendered viewpoint of a player
@@ -106,7 +113,7 @@ func (p *Player) Loop(conn *websocket.Conn) {
 			enc := json.NewEncoder(wr)
 			update := StateUpdate{
 				Score:    p.getScore(),
-				ViewPort: p.s.m.ExtractPlayerView(p.viewport),
+				ViewPort: p.s.m.ExtractPlayerView(p.Viewport),
 			}
 			err = enc.Encode(update)
 			if err != nil {
@@ -159,6 +166,10 @@ func (p *Player) Loop(conn *websocket.Conn) {
 			select {
 			case updateViewport <- true:
 			default:
+			}
+			err = p.s.Persist()
+			if err != nil {
+				log.Println("can't persist player list:", err)
 			}
 		case "uncover":
 			result, uncovered := p.s.m.Uncover(p.mapViewport(req))
