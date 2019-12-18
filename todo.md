@@ -6,9 +6,6 @@
 	- place "unknown" marker
 - support touchpad dragging to move viewport
 - prettier display of currently active viewport location
-- handle disconnect
-	- reconnect websocket
-	- then, move viewport
 
 ### Beamer
 - build
