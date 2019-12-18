@@ -1,5 +1,13 @@
 package main
 
+import (
+	"log"
+	"net/http"
+	"sync"
+
+	"github.com/google/uuid"
+)
+
 type Server struct {
 	sync.RWMutex
 	m *MineField
