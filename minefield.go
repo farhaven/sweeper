@@ -131,15 +131,11 @@ func (m *MineField) Persist() error {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	log.Println("locked")
-
 	fh, err := os.Create(m.persistencePath)
 	if err != nil {
 		return err
 	}
 	defer fh.Close()
-
-	log.Println("file created")
 
 	encoder := gob.NewEncoder(fh)
 	err = encoder.Encode(m)
@@ -147,7 +143,7 @@ func (m *MineField) Persist() error {
 		return err
 	}
 
-	log.Println("minefield written")
+	log.Println("minefield persisted")
 	return nil
 }
 
