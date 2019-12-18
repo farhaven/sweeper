@@ -28,8 +28,21 @@
 .fieldRow {
 	display: flex;
 }
+
+@media screen and (min-width: 35em) {
+	#field {
+		font-size: 200%;
+		margin: auto;
+	}
+}
+
+@media screen and (min-width: 48em) {
+	#field {
+		font-size: 220%;
+	}
+}
+
 #field {
-	font-size: 220%;
 	padding-top: 1em;
 	cursor: pointer;
 }
@@ -59,11 +72,11 @@ li {
 li.active {
 	background: #28d;
 }
-#sidebar {
-	max-width: 40em;
+
+.container {
+	margin: auto;
+	max-width: 65em;
+	padding-top: 2em;
 	padding-left: 1em;
 	padding-right: 1em;
-}
-body {
-	display: flex;
 }
