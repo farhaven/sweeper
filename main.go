@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"io"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -23,20 +20,6 @@ var websocketUpgrader = websocket.Upgrader{
 func handleIndex(w http.ResponseWriter, r *http.Request) {
 	log.Println("got request for path", r.URL.Path)
 
-	if r.URL.Path != "/" {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "can't find resource for path %s", r.URL.Path)
-		return
-	}
-
-	fh, err := os.Open("index.html")
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "can't open index: %s", err)
-		return
-	}
-	defer fh.Close()
-
 	cookie, err := r.Cookie("sweeperID")
 	if err != nil {
 		log.Println("Generating ID cookie")
@@ -49,9 +32,9 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Println("Got sweeper ID:", cookie.Value)
 	}
-	w.Header().Add("content-type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	io.Copy(w, fh)
+
+	fs := http.FileServer(http.Dir("./static"))
+	fs.ServeHTTP(w, r)
 }
 
 func main() {
