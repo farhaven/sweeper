@@ -24,12 +24,15 @@ type Player struct {
 	s        *Server
 	viewport image.Rectangle
 	score    uint
+	id       string
 }
 
-func NewPlayer(s *Server) *Player {
+func NewPlayer(s *Server, id string) *Player {
+	log.Println("Player with ID", id, "connected")
 	return &Player{
 		s:        s,
 		viewport: image.Rect(-_viewPortWidth/2, -_viewPortHeight/2, _viewPortWidth/2, _viewPortHeight/2),
+		id:       id,
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -22,31 +23,36 @@ var websocketUpgrader = websocket.Upgrader{
 
 type Server struct {
 	sync.RWMutex
-	m              *MineField
+	m *MineField
+
+	// trigger channels for updating currently connected players
 	updateChannels map[chan bool]bool
-	players        map[*Player]bool
+
+	// currently active players, or players that have not been gone for too long
+	players map[string]*Player
 }
 
 func NewServer(m *MineField) *Server {
 	return &Server{
 		m:              m,
 		updateChannels: make(map[chan bool]bool),
-		players:        make(map[*Player]bool),
+		players:        make(map[string]*Player),
 	}
 }
 
-func (s *Server) AddPlayer(p *Player) {
+// AddPlayer creates a new player for the given ID and returns it. If there is already a player with that ID, it is
+// used instead of creating a new player object.
+func (s *Server) AddPlayer(id string) *Player {
 	s.Lock()
 	defer s.Unlock()
 
-	s.players[p] = true
-}
+	p, ok := s.players[id]
+	if ok {
+		return p
+	}
 
-func (s *Server) RemovePlayer(p *Player) {
-	s.Lock()
-	defer s.Unlock()
-
-	delete(s.players, p)
+	s.players[id] = NewPlayer(s, id)
+	return s.players[id]
 }
 
 func (s *Server) AddUpdateChannel(ch chan bool) {
@@ -84,10 +90,16 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	p := NewPlayer(s)
-	s.AddPlayer(p)
-	defer s.RemovePlayer(p)
+	var playerID string
+	idCookie, err := r.Cookie("sweeperID")
+	if err != nil {
+		log.Println("No sweeper ID cookie supplied, using a new randomly generated ID:", err)
+		playerID = uuid.New().String()
+	} else {
+		playerID = idCookie.Value
+	}
 
+	p := s.AddPlayer(playerID)
 	log.Println("running loop for player", p)
 	p.Loop(conn)
 	log.Println("player", p, "disconnected")
@@ -110,6 +122,18 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	defer fh.Close()
 
+	cookie, err := r.Cookie("sweeperID")
+	if err != nil {
+		log.Println("Generating ID cookie")
+		id := uuid.New().String()
+		cookie = &http.Cookie{
+			Name:  "sweeperID",
+			Value: id,
+		}
+		http.SetCookie(w, cookie)
+	} else {
+		log.Println("Got sweeper ID:", cookie.Value)
+	}
 	w.Header().Add("content-type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	io.Copy(w, fh)
