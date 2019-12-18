@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"image"
 	"log"
 	"sync"
@@ -34,6 +35,10 @@ func NewPlayer(s *Server, id string) *Player {
 		viewport: image.Rect(-_viewPortWidth/2, -_viewPortHeight/2, _viewPortWidth/2, _viewPortHeight/2),
 		id:       id,
 	}
+}
+
+func (p *Player) String() string {
+	return fmt.Sprintf("%s@%s", p.id, p.viewport)
 }
 
 func (p *Player) mapViewport(req ClientRequest) (int, int) {
