@@ -8,9 +8,26 @@ var Sweeper = {
 		ctx: null,
 		width: 500,
 		height: 500,
-		xscale: 1.25,
-		yscale: 1.25,
-		fontSz: 14,
+		xscale: null,
+		yscale: null,
+		fontSz: null,
+	},
+
+	updateScale: function() {
+		console.log("window:", window.innerHeight, window.innerWidth);
+		let base = Math.min(window.innerHeight, window.innerWidth);
+		console.log("base", base);
+
+		let scale = (base - 40) / Sweeper.Field.width;
+		console.log("scale", scale);
+		Sweeper.Field.xscale = scale;
+		Sweeper.Field.yscale = scale;
+
+
+		var canvas = document.getElementById("field");
+		// Use CSS to scale the canvas
+		canvas.style.width = parseInt(Sweeper.Field.width * Sweeper.Field.xscale) + "px";
+		canvas.style.height = parseInt(Sweeper.Field.height * Sweeper.Field.yscale) + "px";
 	},
 
 	handleMessage: function(socketMessage) {
@@ -63,21 +80,22 @@ var Sweeper = {
 	},
 
 	drawFieldElement: function (col, row, text, textStyle, fillStyle) {
-		let xscale = Sweeper.Field.width / Sweeper.Viewport.width;
-		let yscale = Sweeper.Field.height / Sweeper.Viewport.height;
+		let numCols = Sweeper.Field.width / Sweeper.Viewport.width;
+		let numRows = Sweeper.Field.height / Sweeper.Viewport.height;
 
 		Sweeper.Field.ctx.strokeStyle = "1px solid black";
-		Sweeper.Field.ctx.strokeRect(col * xscale, row * yscale, xscale, yscale);
+		Sweeper.Field.ctx.strokeRect(col * numCols, row * numRows, numCols, numRows);
 
 		if ((fillStyle != undefined) && (fillStyle != null)) {
 			Sweeper.Field.ctx.fillStyle = fillStyle;
-			Sweeper.Field.ctx.fillRect(col * xscale, row * yscale, xscale, yscale);
+			Sweeper.Field.ctx.fillRect(col * numCols, row * numRows, numCols, numRows);
 		}
 
 		if ((text != undefined) && (text != null)) {
 			Sweeper.Field.ctx.font = "bold " + Sweeper.Field.fontSz + "px Monospace";
+			var metrics = Sweeper.Field.ctx.measureText(text);
 			Sweeper.Field.ctx.fillStyle = textStyle;
-			Sweeper.Field.ctx.fillText(text, (col * xscale) + Sweeper.Field.fontSz / 2, (row * yscale) + Sweeper.Field.fontSz * 1.25);
+			Sweeper.Field.ctx.fillText(text, (col * numCols) + metrics.width * 0.75, (row * numRows) + metrics.width * 2);
 		}
 	},
 
@@ -87,9 +105,8 @@ var Sweeper = {
 		canvas.width = Sweeper.Field.width;
 		canvas.height = Sweeper.Field.height;
 
-		// Use CSS to scale the canvas
-		canvas.style.width = parseInt(Sweeper.Field.width * Sweeper.Field.xscale) + "px";
-		canvas.style.height = parseInt(Sweeper.Field.height * Sweeper.Field.yscale) + "px";
+		Sweeper.Field.fontSz = (Sweeper.Field.width / Sweeper.Viewport.width) / 1.5;
+		Sweeper.updateScale();
 
 		Sweeper.Field.ctx = canvas.getContext('2d');
 		Sweeper.clearField();
