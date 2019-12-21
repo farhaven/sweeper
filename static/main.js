@@ -178,11 +178,10 @@ var Sweeper = {
 
 		var field = document.getElementById("field");
 
-		// Mode switcher
-		var mode = "mark";
-
-		field.addEventListener("click", event => {
+		function handleClick(event) {
 			event.preventDefault();
+
+			console.log("click", event);
 
 			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
 			let yscale = (Sweeper.Field.height / Sweeper.Viewport.height) * Sweeper.Field.yscale;
@@ -191,20 +190,46 @@ var Sweeper = {
 			var y = parseInt((event.clientY - event.target.offsetTop) / yscale);
 
 			var request = {
-				Kind: mode,
 				X: x,
 				Y: y
 			}
-			ws.send(JSON.stringify(request));
-		});
 
+			switch (event.buttons) {
+				case 0:
+					request.Kind = "mark"
+					break;
+				case 2:
+					request.Kind = "uncover"
+					break;
+				default:
+					console.log("unexpected buttons:", event.buttons, "defaulting to mark");
+					request.Kind = "mark"
+					break;
+			}
+			ws.send(JSON.stringify(request));
+		}
+
+		field.addEventListener("contextmenu", handleClick);
+		field.addEventListener("click", handleClick);
+
+		// Touch event handling
 		var touchX = null;
 		var touchY = null;
+		var touchTime = null;
+		var touchTimeout = null;
 
 		field.addEventListener("touchstart", event => {
 			event.preventDefault();
 			touchX = event.touches[0].clientX;
 			touchY = event.touches[0].clientY;
+			touchTime = new Date();
+			touchTimeout = setTimeout(function() {
+				var loc = document.getElementById("location");
+				loc.classList.add("notify");
+				setTimeout(function() {
+					loc.classList.remove("notify");
+				}, 400);
+			}, 1000);
 		});
 
 		field.addEventListener("touchmove", event => {
@@ -213,6 +238,7 @@ var Sweeper = {
 
 		field.addEventListener("touchend", event => {
 			event.preventDefault();
+			clearTimeout(touchTimeout);
 
 			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
 			let yscale = (Sweeper.Field.height / Sweeper.Viewport.height) * Sweeper.Field.yscale;
@@ -225,11 +251,16 @@ var Sweeper = {
 			if ((deltaX == 0) && (deltaY == 0)) {
 				let x = parseInt((touch.clientX - touch.target.offsetLeft) / xscale);
 				let y = parseInt((touch.clientY - touch.target.offsetTop) / yscale);
-
 				request = {
-					Kind: mode,
 					X: x,
 					Y: y
+				}
+				let timeDelta = (new Date()) - touchTime;
+				if (timeDelta > 1000) {
+					// Pressed for more than 2 seconds
+					request.Kind = "uncover"
+				} else {
+					request.Kind = "mark"
 				}
 			} else {
 				request = {
@@ -239,21 +270,6 @@ var Sweeper = {
 				}
 			}
 			ws.send(JSON.stringify(request));
-		});
-
-		var modeMark = document.getElementById("mode-mark");
-		var modeUncover = document.getElementById("mode-uncover");
-
-		modeMark.addEventListener("click", event => {
-			mode = "mark";
-			modeUncover.classList.remove("active");
-			modeMark.classList.add("active");
-		});
-
-		modeUncover.addEventListener("click", event => {
-			mode = "uncover";
-			modeUncover.classList.add("active");
-			modeMark.classList.remove("active");
 		});
 	}
 };

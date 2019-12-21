@@ -6,29 +6,11 @@
 
 #location {
 	font-family: monospace;
-}
-#menu {
-	border: 1px solid black;
-	width: max-content;
-	height: max-content;
-	margin-top: 1em;
-}
-ul {
-	display: flex;
-	padding-left: 0;
-	margin: 0;
-	cursor: pointer;
-}
-li:hover {
-	background: #ccc;
-}
-li {
-	font-size: 200%;
-	list-style: none;
 	padding: 1em;
 }
-li.active {
-	background: #28d;
+
+.notify {
+	background: #aaa;
 }
 
 .container {
