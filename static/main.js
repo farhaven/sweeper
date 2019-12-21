@@ -200,15 +200,28 @@ var Sweeper = {
 			let xscale = Sweeper.Field.width / Sweeper.Viewport.width;
 			let yscale = Sweeper.Field.height / Sweeper.Viewport.height;
 
-			let deltaX = parseInt((touchX - event.changedTouches[0].clientX) / xscale);
-			let deltaY = parseInt((touchY - event.changedTouches[0].clientY) / yscale);
+			let touch = event.changedTouches[0];
+			let deltaX = parseInt((touchX - touch.clientX) / xscale);
+			let deltaY = parseInt((touchY - touch.clientY) / yscale);
 
 			console.log(deltaX, deltaY);
 
-			var request = {
-				Kind: "move",
-				X: deltaX,
-				Y: deltaY
+			var request = null;
+			if ((deltaX == 0) && (deltaY == 0)) {
+				let x = parseInt((touch.clientX - touch.target.offsetLeft) / xscale);
+				let y = parseInt((touch.clientY - touch.target.offsetTop) / yscale);
+
+				request = {
+					Kind: mode,
+					X: x,
+					Y: y
+				}
+			} else {
+				request = {
+					Kind: "move",
+					X: deltaX,
+					Y: deltaY
+				}
 			}
 			ws.send(JSON.stringify(request));
 		});
