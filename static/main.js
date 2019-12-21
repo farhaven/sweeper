@@ -179,6 +179,40 @@ var Sweeper = {
 			ws.send(JSON.stringify(request));
 		});
 
+		var touchX = null;
+		var touchY = null;
+
+		field.addEventListener("touchstart", event => {
+			event.preventDefault();
+			console.log("touchstart", event.touches[0]);
+			touchX = event.touches[0].clientX;
+			touchY = event.touches[0].clientY;
+		});
+
+		field.addEventListener("touchmove", event => {
+			event.preventDefault();
+		});
+
+		field.addEventListener("touchend", event => {
+			event.preventDefault();
+			console.log("touchend", event.changedTouches[0]);
+
+			let xscale = Sweeper.Field.width / Sweeper.Viewport.width;
+			let yscale = Sweeper.Field.height / Sweeper.Viewport.height;
+
+			let deltaX = parseInt((touchX - event.changedTouches[0].clientX) / xscale);
+			let deltaY = parseInt((touchY - event.changedTouches[0].clientY) / yscale);
+
+			console.log(deltaX, deltaY);
+
+			var request = {
+				Kind: "move",
+				X: deltaX,
+				Y: deltaY
+			}
+			ws.send(JSON.stringify(request));
+		});
+
 		var modeMark = document.getElementById("mode-mark");
 		var modeUncover = document.getElementById("mode-uncover");
 
