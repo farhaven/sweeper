@@ -180,8 +180,11 @@ var Sweeper = {
 
 		function handleClick(event) {
 			event.preventDefault();
-
-			console.log("click", event);
+			if (inTouch) {
+				inTouch = false;
+				return;
+			}
+			clearTouchTimeouts();
 
 			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
 			let yscale = (Sweeper.Field.height / Sweeper.Viewport.height) * Sweeper.Field.yscale;
@@ -194,51 +197,79 @@ var Sweeper = {
 				Y: y
 			}
 
-			switch (event.buttons) {
-				case 0:
-					request.Kind = "mark"
-					break;
-				case 2:
-					request.Kind = "uncover"
-					break;
-				default:
-					console.log("unexpected buttons:", event.buttons, "defaulting to mark");
-					request.Kind = "mark"
-					break;
+			if ((new Date()) - touchTime > 1000) {
+				request.Kind = "uncover";
+			} else {
+				switch (event.button) {
+					case 0:
+						request.Kind = "mark"
+						break;
+					case 2:
+						request.Kind = "uncover"
+						break;
+					default:
+						console.log("unexpected buttons:", event.buttons, "defaulting to mark");
+						request.Kind = "mark"
+						break;
+				}
 			}
 			ws.send(JSON.stringify(request));
 		}
 
-		field.addEventListener("contextmenu", handleClick);
-		field.addEventListener("click", handleClick);
-
-		// Touch event handling
-		var touchX = null;
-		var touchY = null;
 		var touchTime = null;
-		var touchTimeout = null;
-
-		field.addEventListener("touchstart", event => {
-			event.preventDefault();
-			touchX = event.touches[0].clientX;
-			touchY = event.touches[0].clientY;
+		var touchTimeouts = [];
+		function registerTouchTimeout() {
 			touchTime = new Date();
-			touchTimeout = setTimeout(function() {
+			touchTimeouts.push(setTimeout(function() {
 				var loc = document.getElementById("location");
 				loc.classList.add("notify");
 				setTimeout(function() {
 					loc.classList.remove("notify");
 				}, 400);
-			}, 1000);
+			}, 1000));
+		}
+		function clearTouchTimeouts() {
+			for (idx = 0; idx < touchTimeouts.length; idx++) {
+				clearTimeout(touchTimeouts[idx]);
+			}
+			touchTimeouts = [];
+		}
+
+		field.addEventListener("contextmenu", event => event.preventDefault());
+		field.addEventListener("pointerdown", event => {
+			event.preventDefault();
+			registerTouchTimeout();
+		});
+		field.addEventListener("pointerup", handleClick);
+
+		// Touch event handling
+		var touchX = null;
+		var touchY = null;
+		var inTouch = false;
+
+		field.addEventListener("touchstart", event => {
+			event.preventDefault();
+			touchX = event.touches[0].clientX;
+			touchY = event.touches[0].clientY;
+			inTouch = true;
+			registerTouchTimeout();
 		});
 
 		field.addEventListener("touchmove", event => {
 			event.preventDefault();
+			var x = event.touches[0].clientX;
+			var y = event.touches[0].clientY;
+
+			// Sometimes, jittery fingers cause small movement events, even if the finger didn't really move.
+			if (Math.sqrt(Math.pow(x - touchX, 2) + Math.pow(y - touchY, 2)) < 15) {
+				return;
+			}
+			clearTouchTimeouts();
 		});
 
 		field.addEventListener("touchend", event => {
 			event.preventDefault();
-			clearTimeout(touchTimeout);
+			clearTouchTimeouts();
 
 			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
 			let yscale = (Sweeper.Field.height / Sweeper.Viewport.height) * Sweeper.Field.yscale;
