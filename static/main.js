@@ -302,6 +302,35 @@ var Sweeper = {
 			}
 			ws.send(JSON.stringify(request));
 		});
+
+		// Wire up side bar
+		function sidebar(showWhatsThis, showHighscores) {
+			let whatsthis = document.getElementById("whatsthis");
+			let highscores = document.getElementById("highscores");
+			whatsthis.hidden = !showWhatsThis;
+			highscores.hidden = !showHighscores;
+
+			let selectWhatsThis = document.getElementById("select-whatsthis");
+			let selectHighscores = document.getElementById("select-highscores");
+
+			if (showWhatsThis) {
+				selectWhatsThis.classList.add("pure-menu-selected");
+				selectHighscores.classList.remove("pure-menu-selected");
+			}
+			if (showHighscores) {
+				selectWhatsThis.classList.remove("pure-menu-selected");
+				selectHighscores.classList.add("pure-menu-selected");
+			}
+		}
+
+		document.getElementById("select-whatsthis").addEventListener("click", event => {
+			event.preventDefault();
+			sidebar(true, false);
+		});
+		document.getElementById("select-highscores").addEventListener("click", event => {
+			event.preventDefault();
+			sidebar(false, true);
+		})
 	}
 };
 
