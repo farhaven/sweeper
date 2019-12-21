@@ -18,11 +18,14 @@ var Sweeper = {
 		let base = Math.min(window.innerHeight, window.innerWidth);
 		console.log("base", base);
 
-		let scale = (base - 40) / Sweeper.Field.width;
+		var reduction = 40;
+		if (window.innerWidth > 1000) {
+			reduction = 175;
+		}
+		let scale = (base - reduction) / Sweeper.Field.width;
 		console.log("scale", scale);
 		Sweeper.Field.xscale = scale;
 		Sweeper.Field.yscale = scale;
-
 
 		var canvas = document.getElementById("field");
 		// Use CSS to scale the canvas
@@ -107,6 +110,7 @@ var Sweeper = {
 
 		Sweeper.Field.fontSz = (Sweeper.Field.width / Sweeper.Viewport.width) / 1.5;
 		Sweeper.updateScale();
+		window.addEventListener("resize", Sweeper.updateScale, false);
 
 		Sweeper.Field.ctx = canvas.getContext('2d');
 		Sweeper.clearField();

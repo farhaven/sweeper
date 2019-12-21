@@ -1,24 +1,6 @@
 #field {
 	border: 1px solid black;
-}
-
-@media screen and (min-width: 35em) {
-	#field {
-		font-size: 200%;
-	}
-	#fieldcontainer {
-		margin: auto;
-	}
-}
-
-@media screen and (min-width: 48em) {
-	#field {
-		font-size: 220%;
-	}
-}
-
-#fieldcontainer {
-	padding-top: 1em;
+	margin-top: 1em;
 	cursor: pointer;
 }
 
@@ -51,7 +33,7 @@ li.active {
 
 .container {
 	margin: auto;
-	max-width: 65em;
+	max-width: 80em;
 	padding-top: 2em;
 	padding-left: 1em;
 	padding-right: 1em;
