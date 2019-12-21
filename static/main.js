@@ -14,10 +14,10 @@ var Sweeper = {
 	},
 
 	updateScale: function() {
-		let base = Math.min(window.innerHeight, window.innerWidth);
+		let base = Math.min(window.innerHeight, window.innerWidth, 1000);
 
 		var reduction = 40;
-		if (window.innerWidth > 1000) {
+		if (base > 800) {
 			reduction = 175;
 		}
 		let scale = (base - reduction) / Sweeper.Field.width;
