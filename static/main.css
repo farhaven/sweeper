@@ -1,37 +1,12 @@
-.fieldElement {
-	width: 1em;
-	height: 1em;
-	min-width: 1em;
-	max-width: 1em;
-	min-height: 1em;
-	max-height: 1em;
+#field {
 	border: 1px solid black;
-	font-family: monospace;
-	text-align: center;
-}
-.flag {
-	color: darkred;
-}
-.mark {
-	color: darkblue;
-}
-.boom {
-	color: red;
-	background: black;
-}
-.dim {
-	color: #bbb;
-}
-.number {
-	color: #666;
-}
-.fieldRow {
-	display: flex;
 }
 
 @media screen and (min-width: 35em) {
 	#field {
 		font-size: 200%;
+	}
+	#fieldcontainer {
 		margin: auto;
 	}
 }
@@ -42,10 +17,11 @@
 	}
 }
 
-#field {
+#fieldcontainer {
 	padding-top: 1em;
 	cursor: pointer;
 }
+
 #location {
 	font-family: monospace;
 }
