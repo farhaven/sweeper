@@ -6,8 +6,11 @@ var Sweeper = {
 
 	Field: {
 		ctx: null,
-		width: 320,
-		height: 320
+		width: 500,
+		height: 500,
+		xscale: 1.25,
+		yscale: 1.25,
+		fontSz: 14,
 	},
 
 	handleMessage: function(socketMessage) {
@@ -72,9 +75,9 @@ var Sweeper = {
 		}
 
 		if ((text != undefined) && (text != null)) {
-			Sweeper.Field.ctx.font = "bold 10px Monospace";
+			Sweeper.Field.ctx.font = "bold " + Sweeper.Field.fontSz + "px Monospace";
 			Sweeper.Field.ctx.fillStyle = textStyle;
-			Sweeper.Field.ctx.fillText(text, (col * xscale) + 5, (row * yscale) + 13);
+			Sweeper.Field.ctx.fillText(text, (col * xscale) + Sweeper.Field.fontSz / 2, (row * yscale) + Sweeper.Field.fontSz * 1.25);
 		}
 	},
 
@@ -83,6 +86,10 @@ var Sweeper = {
 		var canvas = document.getElementById("field");
 		canvas.width = Sweeper.Field.width;
 		canvas.height = Sweeper.Field.height;
+
+		// Use CSS to scale the canvas
+		canvas.style.width = parseInt(Sweeper.Field.width * Sweeper.Field.xscale) + "px";
+		canvas.style.height = parseInt(Sweeper.Field.height * Sweeper.Field.yscale) + "px";
 
 		Sweeper.Field.ctx = canvas.getContext('2d');
 		Sweeper.clearField();
@@ -165,11 +172,13 @@ var Sweeper = {
 			console.log("click", event);
 			event.preventDefault();
 
-			let xscale = Sweeper.Field.width / Sweeper.Viewport.width;
-			let yscale = Sweeper.Field.height / Sweeper.Viewport.height;
+			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
+			let yscale = (Sweeper.Field.height / Sweeper.Viewport.height) * Sweeper.Field.yscale;
 
 			var x = parseInt((event.clientX - event.target.offsetLeft) / xscale);
 			var y = parseInt((event.clientY - event.target.offsetTop) / yscale);
+
+			console.log("click", x, y);
 
 			var request = {
 				Kind: mode,
@@ -197,8 +206,8 @@ var Sweeper = {
 			event.preventDefault();
 			console.log("touchend", event.changedTouches[0]);
 
-			let xscale = Sweeper.Field.width / Sweeper.Viewport.width;
-			let yscale = Sweeper.Field.height / Sweeper.Viewport.height;
+			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
+			let yscale = (Sweeper.Field.height / Sweeper.Viewport.height) * Sweeper.Field.yscale;
 
 			let touch = event.changedTouches[0];
 			let deltaX = parseInt((touchX - touch.clientX) / xscale);
