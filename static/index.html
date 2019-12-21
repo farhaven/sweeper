@@ -18,24 +18,53 @@
 				<canvas id="field"></canvas>
 			</div>
 			<div class="pure-u-1 pure-u-lg-1-3">
-				<h1>What's this?</h1>
-				<p>You're playing minesweeper on an infinite grid, together with other people. There is no game over. If you trigger a
-				mine, your score resets to zero. Uncovering non-mined fields increases the score.
-				<p>Scroll with the arrow keys or by dragging the field.
-				<p>If you touch the field without moving your finger or if you click it, one of two things happens:
-				<dl>
-					<dt>Short left click or short touch</dt>
-					<dd>Toggles the field between three states: <em>Nothing</em>, <em>Flagged</em> (P) or <em>Unknown</em> (?)</dd>
-					<dt>Right click, long left click or long touch</dt>
-					<dd>
-					Uncovers the clicked field. If it is a mine, your score resets to zero.
-					<p>Otherwise, it turns into a number that describes how many mines are in the 8 adjoining fields. If that number is zero,
-					neighboring fields are uncovered until a "border" of mines is hit.
-					<p>Each uncovered square increases your score by one.
-					</dd>
-				</dl>
-				<p>This is a work in progress. Things may change. If you have cool ideas, drop me an email:
-				<a href="mailto:gbe@unobtanium.de">gbe@unobtanium.de</a>
+				<div class="pure-menu pure-menu-horizontal">
+					<ul class="pure-menu-list">
+						<li class="pure-menu-item pure-menu-selected">
+							<a href="#" class="pure-menu-link">What's this?</a>
+						</li>
+						<li class="pure-menu-item">
+							<a href="#" class="pure-menu-link">Highscores</a>
+						</li>
+					</ul>
+				</div>
+				<div class="sidebar">
+					<div id="whatsthis">
+						<p>You're playing minesweeper on an infinite grid, together with other people. There is no game over. If you trigger a
+						mine, your score resets to zero. Uncovering non-mined fields increases the score.
+						<p>Scroll with the arrow keys or by dragging the field.
+						<p>If you touch the field without moving your finger or if you click it, one of two things happens:
+						<dl>
+							<dt>Short left click or short touch</dt>
+							<dd>Toggles the field between three states: <em>Nothing</em>, <em>Flagged</em> (P) or <em>Unknown</em> (?)</dd>
+							<dt>Right click, long left click or long touch</dt>
+							<dd>
+							Uncovers the clicked field. If it is a mine, your score resets to zero.
+							<p>Otherwise, it turns into a number that describes how many mines are in the 8 adjoining fields. If that number is zero,
+							neighboring fields are uncovered until a "border" of mines is hit.
+							<p>Each uncovered square increases your score by one.
+							</dd>
+						</dl>
+						<p>This is a work in progress. Things may change. If you have cool ideas, drop me an email:
+						<a href="mailto:gbe@unobtanium.de">gbe@unobtanium.de</a>
+					</div>
+					<div id="highscores" hidden>
+						<table class="pure-table pure-table-horizontal">
+							<thead>
+								<tr>
+									<td>#</td>
+									<td><!-- Name --></td>
+									<td><!-- Score --></td>
+								</tr>
+							</thead>
+							<tbody id="scoredata">
+								<tr><td>1</td><td>Bernadette Liefert</td><td>4223</td></tr>
+								<tr><td>2</td><td>Hans Acker</td><td>1337</td></td>
+								<tr><td>3</td><td>F. Nord</td><td>1111</td></tr>
+							</tbody>
+						</table
+					</div>
+				</div>
 			</div>
 		</div>
 		<script src="/main.js" type="application/javascript"></script>
