@@ -14,16 +14,13 @@ var Sweeper = {
 	},
 
 	updateScale: function() {
-		console.log("window:", window.innerHeight, window.innerWidth);
 		let base = Math.min(window.innerHeight, window.innerWidth);
-		console.log("base", base);
 
 		var reduction = 40;
 		if (window.innerWidth > 1000) {
 			reduction = 175;
 		}
 		let scale = (base - reduction) / Sweeper.Field.width;
-		console.log("scale", scale);
 		Sweeper.Field.xscale = scale;
 		Sweeper.Field.yscale = scale;
 
@@ -35,7 +32,6 @@ var Sweeper = {
 
 	handleMessage: function(socketMessage) {
 		var message = JSON.parse(socketMessage.data);
-		console.log("handling message", message);
 
 		// Update position display
 		var locSpan = document.getElementById("location")
@@ -132,7 +128,6 @@ var Sweeper = {
 		}
 
 		let socketURL = protocol + "://" + document.location.host + document.location.pathname + path
-		console.log("socketurl", socketURL);
 
 		var ws = null;
 		var connectSocket = function() {
@@ -175,11 +170,8 @@ var Sweeper = {
 					request.Y += 1;
 					break;
 				default:
-					console.log("unhandled key event", event);
 					return;
 			}
-
-			console.log("sending request", request);
 
 			ws.send(JSON.stringify(request));
 		})
@@ -190,7 +182,6 @@ var Sweeper = {
 		var mode = "mark";
 
 		field.addEventListener("click", event => {
-			console.log("click", event);
 			event.preventDefault();
 
 			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
@@ -198,8 +189,6 @@ var Sweeper = {
 
 			var x = parseInt((event.clientX - event.target.offsetLeft) / xscale);
 			var y = parseInt((event.clientY - event.target.offsetTop) / yscale);
-
-			console.log("click", x, y);
 
 			var request = {
 				Kind: mode,
@@ -214,7 +203,6 @@ var Sweeper = {
 
 		field.addEventListener("touchstart", event => {
 			event.preventDefault();
-			console.log("touchstart", event.touches[0]);
 			touchX = event.touches[0].clientX;
 			touchY = event.touches[0].clientY;
 		});
@@ -225,7 +213,6 @@ var Sweeper = {
 
 		field.addEventListener("touchend", event => {
 			event.preventDefault();
-			console.log("touchend", event.changedTouches[0]);
 
 			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
 			let yscale = (Sweeper.Field.height / Sweeper.Viewport.height) * Sweeper.Field.yscale;
@@ -233,8 +220,6 @@ var Sweeper = {
 			let touch = event.changedTouches[0];
 			let deltaX = parseInt((touchX - touch.clientX) / xscale);
 			let deltaY = parseInt((touchY - touch.clientY) / yscale);
-
-			console.log(deltaX, deltaY);
 
 			var request = null;
 			if ((deltaX == 0) && (deltaY == 0)) {
