@@ -41,7 +41,6 @@ var Sweeper = {
 	},
 
 	updateHighscores: function(scores) {
-		console.log("highscores", scores);
 		let tbody = document.createElement("tbody");
 		for (idx = 0; idx < scores.length; idx++) {
 			let row = document.createElement("tr");
