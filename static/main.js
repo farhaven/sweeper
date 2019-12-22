@@ -215,6 +215,17 @@ var Sweeper = {
 
 		var field = document.getElementById("field");
 
+		function mapEventToField(event) {
+			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
+			let yscale = (Sweeper.Field.height / Sweeper.Viewport.height) * Sweeper.Field.yscale;
+
+			let r = field.getBoundingClientRect();
+			let x = parseInt((event.clientX - r.left) / xscale);
+			let y = parseInt((event.clientY - r.top) / yscale);
+
+			return {X: x, Y: y};
+		}
+
 		function handleClick(event) {
 			event.preventDefault();
 			if (inTouch) {
@@ -223,16 +234,9 @@ var Sweeper = {
 			}
 			clearTouchTimeouts();
 
-			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
-			let yscale = (Sweeper.Field.height / Sweeper.Viewport.height) * Sweeper.Field.yscale;
+			console.log("click", event);
 
-			var x = parseInt((event.clientX - event.target.offsetLeft) / xscale);
-			var y = parseInt((event.clientY - event.target.offsetTop) / yscale);
-
-			var request = {
-				X: x,
-				Y: y
-			}
+			var request = mapEventToField(event);
 
 			if ((new Date()) - touchTime > 1000) {
 				request.Kind = "uncover";
@@ -317,12 +321,7 @@ var Sweeper = {
 
 			var request = null;
 			if ((deltaX == 0) && (deltaY == 0)) {
-				let x = parseInt((touch.clientX - touch.target.offsetLeft) / xscale);
-				let y = parseInt((touch.clientY - touch.target.offsetTop) / yscale);
-				request = {
-					X: x,
-					Y: y
-				}
+				var request = mapEventToField(touch);
 				let timeDelta = (new Date()) - touchTime;
 				if (timeDelta > 1000) {
 					// Pressed for more than 2 seconds
