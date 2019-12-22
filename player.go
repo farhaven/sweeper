@@ -86,10 +86,11 @@ func (p *Player) resetScore() {
 	p.Score = 0
 }
 
-// A state update contains the current score and the rendered viewpoint of a player
+// A state update contains the current score and the rendered viewpoint of a player, as well as the current high score list
 type StateUpdate struct {
-	Score    uint
-	ViewPort ViewPort
+	Score      uint
+	ViewPort   ViewPort
+	Highscores []HighscoreEntry
 }
 
 func (p *Player) Loop(conn *websocket.Conn) {
@@ -112,8 +113,9 @@ func (p *Player) Loop(conn *websocket.Conn) {
 			}
 			enc := json.NewEncoder(wr)
 			update := StateUpdate{
-				Score:    p.getScore(),
-				ViewPort: p.s.m.ExtractPlayerView(p.Viewport),
+				Score:      p.getScore(),
+				ViewPort:   p.s.m.ExtractPlayerView(p.Viewport),
+				Highscores: p.s.GetHighscores(),
 			}
 			err = enc.Encode(update)
 			if err != nil {

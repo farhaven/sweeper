@@ -107,7 +107,7 @@ func NewMineField(threshold uint32, persistencePath string) (*MineField, error) 
 
 	fh, err := os.Open(persistencePath)
 	if err != nil {
-		log.Printf("can't load mine field, using fresh field:", err)
+		log.Printf("can't load mine field, using fresh field: %s", err)
 
 		_, err = rand.Read(m.Seed[:])
 		if err != nil {

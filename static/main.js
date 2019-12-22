@@ -30,6 +30,30 @@ var Sweeper = {
 		canvas.style.height = parseInt(Sweeper.Field.height * Sweeper.Field.yscale) + "px";
 	},
 
+	updateHighscores: function(scores) {
+		console.log("highscores", scores);
+		let tbody = document.createElement("tbody");
+		for (idx = 0; idx < scores.length; idx++) {
+			let row = document.createElement("tr");
+
+			let place = document.createElement("td");
+			place.innerText = idx + 1;
+			row.appendChild(place);
+
+			let name = document.createElement("td");
+			name.innerText = scores[idx].Name;
+			row.appendChild(name);
+
+			let score = document.createElement("td");
+			score.innerText = scores[idx].Score;
+			row.appendChild(score);
+
+			tbody.appendChild(row);
+		}
+		let highscoreTable = document.getElementById("scoredata");
+		highscoreTable.innerHTML = tbody.innerHTML;
+	},
+
 	handleMessage: function(socketMessage) {
 		var message = JSON.parse(socketMessage.data);
 
@@ -72,6 +96,8 @@ var Sweeper = {
 				Sweeper.drawFieldElement(x, y, txt, textStyle, fillStyle);
 			}
 		}
+
+		Sweeper.updateHighscores(message.Highscores);
 	},
 
 	clearField: function() {

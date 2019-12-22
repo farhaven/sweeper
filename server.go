@@ -6,10 +6,17 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"sync"
 
 	"github.com/google/uuid"
 )
+
+// HighscoreEntry is an entry in the highscores table
+type HighscoreEntry struct {
+	Name  string
+	Score uint
+}
 
 type Server struct {
 	mu sync.RWMutex
@@ -53,6 +60,28 @@ func NewServer(m *MineField, persistencePath string) (*Server, error) {
 	log.Println("loaded server state, players:", s.Players)
 
 	return s, nil
+}
+
+func (s *Server) GetHighscores() []HighscoreEntry {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	scores := make([]HighscoreEntry, 0)
+	for _, p := range s.Players {
+		scores = append(scores, HighscoreEntry{
+			Name:  p.Id,
+			Score: p.Score,
+		})
+	}
+
+	sort.Slice(scores, func(i, j int) bool {
+		if scores[i].Score > scores[j].Score {
+			return true
+		}
+		return scores[i].Name > scores[j].Name
+	})
+
+	return scores
 }
 
 func (s *Server) Persist() error {
