@@ -1,10 +1,6 @@
 # TODO
 ## UI
 ### Browser
-- add right click/long tap options:
-	- place flag
-	- place "unknown" marker
-- support touchpad dragging to move viewport
 - prettier display of currently active viewport location
 
 ### Beamer
