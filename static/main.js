@@ -15,36 +15,29 @@ var Sweeper = {
 
 	updateScale: function() {
 		let padding = 10;
+
+		let canvas = document.getElementById("field");
 		let container = document.getElementById("container");
 		let width = container.clientWidth - padding;
 
 		// Large screen
 		var maxFieldWidth = width * 0.66; /* 2/3rd for field */
-		var scale = maxFieldWidth / Sweeper.Field.width;
+		var scale = (Math.min(maxFieldWidth, window.innerHeight) - (padding * 2)) / Sweeper.Field.width;
 
+		// "Small" screen
 		if (width < 1020) {
-			scale = (Math.min(width, window.innerHeight) - padding) / Sweeper.Field.width;
+			scale = (Math.min(width, window.innerHeight) - (padding * 2)) / Sweeper.Field.width;
 		}
 
 		console.log("update scale", container);
-		/*
-		let base = Math.min(window.innerHeight, container.clientWidth);
-		console.log("base", base, "cw", container.clientWidth);
-
-		var reduction = 40;
-		if (base > 800) {
-			reduction = 175;
-		}
-		let scale = (base - reduction) / Sweeper.Field.width;
-		*/
 
 		Sweeper.Field.xscale = scale;
 		Sweeper.Field.yscale = scale;
 
-		var canvas = document.getElementById("field");
 		// Use CSS to scale the canvas
 		canvas.style.width = parseInt(Sweeper.Field.width * Sweeper.Field.xscale) + "px";
 		canvas.style.height = parseInt(Sweeper.Field.height * Sweeper.Field.yscale) + "px";
+		canvas.style["margin-left"] = padding + "px";
 	},
 
 	updateHighscores: function(scores) {
