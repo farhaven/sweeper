@@ -167,11 +167,10 @@ func (s *Server) TriggerGlobalUpdate() {
 
 func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	// - upgrade websocket
-	defer r.Body.Close()
-
 	conn, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("Can't upgrade websocket connection: %s", err)
+		r.Body.Close()
 		return
 	}
 	defer conn.Close()
