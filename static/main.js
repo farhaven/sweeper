@@ -6,8 +6,8 @@ var Sweeper = {
 
 	Field: {
 		ctx: null,
-		width: 500,
-		height: 500,
+		width: 1200,
+		height: 1200,
 		xscale: null,
 		yscale: null,
 		fontSz: null,
