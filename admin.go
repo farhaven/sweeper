@@ -63,7 +63,7 @@ type AdminRequest struct {
 
 type PlayerListEntry struct {
 	Name  string
-	Score uint
+	Score uint64
 }
 
 func (s *Server) adminGetPlayers() []PlayerListEntry {

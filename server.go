@@ -72,15 +72,13 @@ func (s *Server) GetHighscores() []HighscoreEntry {
 
 	scores := make([]HighscoreEntry, 0)
 	for _, p := range s.Players {
-		p.mu.RLock()
 		entry := HighscoreEntry{
 			Name:  _anonName,
-			Score: p.Score,
+			Score: p.getScore(),
 		}
 		if p.Name != "" {
 			entry.Name = p.Name
 		}
-		p.mu.RUnlock()
 		scores = append(scores, entry)
 	}
 

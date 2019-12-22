@@ -6,6 +6,7 @@ import (
 	"image"
 	"log"
 	"sync"
+	"sync/atomic"
 
 	"github.com/gorilla/websocket"
 	"golang.org/x/time/rate"
@@ -25,7 +26,7 @@ type Player struct {
 	mu       sync.RWMutex
 	s        *Server
 	Viewport image.Rectangle
-	Score    uint
+	Score    uint64
 	Id       string
 	Name     string
 }
@@ -78,17 +79,16 @@ func (p *Player) shiftViewport(deltaX int, deltaY int) {
 }
 
 func (p *Player) incScore(delta uint) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
-	p.Score += delta
+	atomic.AddUint64(&p.Score, uint64(delta))
 }
 
 func (p *Player) resetScore() {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	atomic.StoreUint64(&p.Score, 0)
+}
 
-	p.Score = 0
+func (p *Player) getScore() uint {
+	val := atomic.LoadUint64(&p.Score)
+	return uint(val)
 }
 
 // A state update contains the current score and the rendered viewpoint of a player, as well as the current high score list
@@ -120,7 +120,7 @@ func (p *Player) Loop(conn *websocket.Conn) {
 			enc := json.NewEncoder(wr)
 			p.mu.RLock()
 			update := StateUpdate{
-				Score:      p.Score,
+				Score:      p.getScore(),
 				Name:       p.Name,
 				ViewPort:   p.s.m.ExtractPlayerView(p.Viewport),
 				Highscores: p.s.GetHighscores(),
