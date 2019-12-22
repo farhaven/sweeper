@@ -14,6 +14,7 @@ import (
 )
 
 const _numHighscores = 20
+const _anonName = "Etaoin Shrdlu"
 
 // HighscoreEntry is an entry in the highscores table
 type HighscoreEntry struct {
@@ -73,7 +74,7 @@ func (s *Server) GetHighscores() []HighscoreEntry {
 	for _, p := range s.Players {
 		p.mu.RLock()
 		entry := HighscoreEntry{
-			Name:  p.Id,
+			Name:  _anonName,
 			Score: p.Score,
 		}
 		if p.Name != "" {
