@@ -61,22 +61,30 @@ type AdminRequest struct {
 	Request string
 }
 
-func (s *Server) adminGetPlayers() []Player {
+type PlayerListEntry struct {
+	Name  string
+	Score uint
+}
+
+func (s *Server) adminGetPlayers() []PlayerListEntry {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	players := make([]Player, 0)
+	players := make([]PlayerListEntry, 0)
 	for _, p := range s.Players {
 		p.mu.RLock()
-		players = append(players, *p)
+		players = append(players, PlayerListEntry{
+			Name:  p.Name,
+			Score: p.Score,
+		})
 		p.mu.RUnlock()
 	}
 
 	return players
 }
 
-func (s *Server) adminGetAdmins() []Player {
-	res := make([]Player, 0)
+func (s *Server) adminGetAdmins() []PlayerListEntry {
+	res := make([]PlayerListEntry, 0)
 
 	admins, err := NewAdminsFromFile("admins.json")
 	if err != nil {
@@ -89,7 +97,10 @@ func (s *Server) adminGetAdmins() []Player {
 			continue
 		}
 		p.mu.RLock()
-		res = append(res, *p)
+		res = append(res, PlayerListEntry{
+			Name:  p.Name,
+			Score: p.Score,
+		})
 		p.mu.RUnlock()
 	}
 
