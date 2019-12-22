@@ -190,6 +190,8 @@ var Sweeper = {
 
 		// Add event handlers for inputs
 		document.addEventListener("keydown", event => {
+			event.preventDefault();
+
 			var request = {
 				Kind: "move",
 				X: 0,
