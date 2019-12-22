@@ -75,10 +75,7 @@ func (s *Server) GetHighscores() []HighscoreEntry {
 	}
 
 	sort.Slice(scores, func(i, j int) bool {
-		if scores[i].Score > scores[j].Score {
-			return true
-		}
-		return scores[i].Name > scores[j].Name
+		return scores[i].Score > scores[j].Score
 	})
 
 	return scores
