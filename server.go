@@ -13,6 +13,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const _numHighscores = 20
+
 // HighscoreEntry is an entry in the highscores table
 type HighscoreEntry struct {
 	Name  string
@@ -88,6 +90,9 @@ func (s *Server) GetHighscores() []HighscoreEntry {
 		return scores[i].Score > scores[j].Score
 	})
 
+	if len(scores) > _numHighscores {
+		scores = scores[:_numHighscores]
+	}
 	return scores
 }
 
