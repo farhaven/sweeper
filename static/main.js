@@ -69,8 +69,12 @@ var Sweeper = {
 		var message = JSON.parse(socketMessage.data);
 
 		// Update position display
-		var locSpan = document.getElementById("location")
+		var locSpan = document.getElementById("location");
 		locSpan.innerText = message.Score + " @ " + JSON.stringify(message.ViewPort.Position);
+
+		// Update player name
+		var playerName = document.getElementById("player-name");
+		playerName.value = message.Name;
 
 		Sweeper.clearField();
 
