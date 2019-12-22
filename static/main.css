@@ -5,6 +5,7 @@
 #field {
 	border: 1px solid black;
 	margin-top: 1em;
+	margin-bottom: 1em;
 	cursor: pointer;
 }
 
@@ -19,10 +20,8 @@
 
 .container {
 	margin: auto;
-	max-width: 80em;
+	max-width: 90em;
 	padding-top: 2em;
-	padding-left: 1em;
-	padding-right: 1em;
 }
 
 dt {

@@ -14,13 +14,30 @@ var Sweeper = {
 	},
 
 	updateScale: function() {
-		let base = Math.min(window.innerHeight, window.innerWidth, 1000);
+		let padding = 10;
+		let container = document.getElementById("container");
+		let width = container.clientWidth - padding;
+
+		// Large screen
+		var maxFieldWidth = width * 0.66; /* 2/3rd for field */
+		var scale = maxFieldWidth / Sweeper.Field.width;
+
+		if (width < 1020) {
+			scale = (Math.min(width, window.innerHeight) - padding) / Sweeper.Field.width;
+		}
+
+		console.log("update scale", container);
+		/*
+		let base = Math.min(window.innerHeight, container.clientWidth);
+		console.log("base", base, "cw", container.clientWidth);
 
 		var reduction = 40;
 		if (base > 800) {
 			reduction = 175;
 		}
 		let scale = (base - reduction) / Sweeper.Field.width;
+		*/
+
 		Sweeper.Field.xscale = scale;
 		Sweeper.Field.yscale = scale;
 
