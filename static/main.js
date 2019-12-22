@@ -42,6 +42,7 @@ var Sweeper = {
 
 			let name = document.createElement("td");
 			name.innerText = scores[idx].Name;
+			name.classList.add("fixed-width");
 			row.appendChild(name);
 
 			let score = document.createElement("td");

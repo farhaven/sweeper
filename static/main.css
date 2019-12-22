@@ -1,3 +1,7 @@
+.fixed-width {
+	font-family: monospace;
+}
+
 #field {
 	border: 1px solid black;
 	margin-top: 1em;
