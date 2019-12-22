@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -33,6 +35,12 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		log.Println("Got sweeper ID:", cookie.Value)
 	}
 
+	if strings.HasPrefix(r.URL.Path, "/admin") && !isAdminUser(cookie.Value) {
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintf(w, "Denied.\n")
+		return
+	}
+
 	fs := http.FileServer(http.Dir("./static"))
 	fs.ServeHTTP(w, r)
 }
@@ -51,6 +59,7 @@ func main() {
 	}
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/ws", s.wsHandler)
+	http.HandleFunc("/admin", s.adminHandler)
 
 	log.Println("HTTP handler set up, listening on port 8080")
 
