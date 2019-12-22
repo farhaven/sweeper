@@ -159,7 +159,7 @@ var Sweeper = {
 
 		// TODO: Add handlers for other events?
 		var protocol = "ws"
-		if (document.location.protocol == "https") {
+		if (document.location.protocol == "https:") {
 			protocol = "wss"
 		}
 		var path = "/ws"
@@ -167,7 +167,7 @@ var Sweeper = {
 			path = "ws"
 		}
 
-		let socketURL = protocol + "://" + document.location.host + document.location.pathname + path
+		let socketURL = protocol + "://" + document.location.host + document.location.pathname + path;
 
 		var ws = null;
 		var connectSocket = function() {
