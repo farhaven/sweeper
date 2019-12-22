@@ -77,13 +77,6 @@ func (p *Player) shiftViewport(deltaX int, deltaY int) {
 	p.Viewport.Max.Y += deltaY
 }
 
-func (p *Player) getScore() uint {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-
-	return p.Score
-}
-
 func (p *Player) incScore(delta uint) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -101,6 +94,7 @@ func (p *Player) resetScore() {
 // A state update contains the current score and the rendered viewpoint of a player, as well as the current high score list
 type StateUpdate struct {
 	Score      uint
+	Name       string
 	ViewPort   ViewPort
 	Highscores []HighscoreEntry
 }
@@ -124,11 +118,14 @@ func (p *Player) Loop(conn *websocket.Conn) {
 				return
 			}
 			enc := json.NewEncoder(wr)
+			p.mu.RLock()
 			update := StateUpdate{
-				Score:      p.getScore(),
+				Score:      p.Score,
+				Name:       p.Name,
 				ViewPort:   p.s.m.ExtractPlayerView(p.Viewport),
 				Highscores: p.s.GetHighscores(),
 			}
+			p.mu.RUnlock()
 			err = enc.Encode(update)
 			if err != nil {
 				log.Println("Can't encode update:", err)
