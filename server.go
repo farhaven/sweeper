@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/gob"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -87,7 +88,7 @@ func (s *Server) Persist() error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	fh, err := os.Create(s.persistencePath)
+	fh, err := ioutil.TempFile(".", s.persistencePath)
 	if err != nil {
 		return err
 	}
@@ -99,8 +100,10 @@ func (s *Server) Persist() error {
 		return err
 	}
 
+	err = os.Rename(fh.Name(), s.persistencePath)
+
 	log.Println("player list persisted")
-	return nil
+	return err
 }
 
 // AddPlayer creates a new player for the given ID and returns it. If there is already a player with that ID, it is

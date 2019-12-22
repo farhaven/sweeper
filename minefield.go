@@ -7,6 +7,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"io/ioutil"
 	"log"
 	"math"
 	"math/rand"
@@ -131,7 +132,7 @@ func (m *MineField) Persist() error {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	fh, err := os.Create(m.persistencePath)
+	fh, err := ioutil.TempFile(".", m.persistencePath)
 	if err != nil {
 		return err
 	}
@@ -143,8 +144,10 @@ func (m *MineField) Persist() error {
 		return err
 	}
 
+	err = os.Rename(fh.Name(), m.persistencePath)
+
 	log.Println("minefield persisted")
-	return nil
+	return err
 }
 
 // IsMineOnLocation returns true if there is a mine in the location indicated by x and y.
