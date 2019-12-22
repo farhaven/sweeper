@@ -123,20 +123,20 @@ func (s *Server) adminHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("got admin request:", req)
 	switch req.Request {
-		case "get-players":
-			log.Println("handling get players")
-			enc := json.NewEncoder(w)
-			players := s.adminGetPlayers()
-			enc.Encode(players)
-		case "get-admins":
-			log.Println("get admins")
-			enc := json.NewEncoder(w)
-			admins := s.adminGetAdmins()
-			enc.Encode(admins)
-		default:
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "unknown request: %s", req.Request)
-			log.Println("unknown request:", req.Request)
-			return
+	case "get-players":
+		log.Println("handling get players")
+		enc := json.NewEncoder(w)
+		players := s.adminGetPlayers()
+		enc.Encode(players)
+	case "get-admins":
+		log.Println("get admins")
+		enc := json.NewEncoder(w)
+		admins := s.adminGetAdmins()
+		enc.Encode(admins)
+	default:
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "unknown request: %s", req.Request)
+		log.Println("unknown request:", req.Request)
+		return
 	}
 }
