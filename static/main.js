@@ -367,6 +367,17 @@ var Sweeper = {
 			event.preventDefault();
 			sidebar(false, true);
 		})
+
+		// Highscore name entry
+		let playerName = document.getElementById("player-name")
+		playerName.addEventListener("change", event => {
+			console.log("player name changed", playerName);
+			let request = {
+				Kind: "update-name",
+				Name: playerName.value,
+			};
+			ws.send(JSON.stringify(request));
+		});
 	}
 };
 

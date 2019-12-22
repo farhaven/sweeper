@@ -69,10 +69,16 @@ func (s *Server) GetHighscores() []HighscoreEntry {
 
 	scores := make([]HighscoreEntry, 0)
 	for _, p := range s.Players {
-		scores = append(scores, HighscoreEntry{
+		p.mu.RLock()
+		entry := HighscoreEntry{
 			Name:  p.Id,
 			Score: p.Score,
-		})
+		}
+		if p.Name != "" {
+			entry.Name = p.Name
+		}
+		p.mu.RUnlock()
+		scores = append(scores, entry)
 	}
 
 	sort.Slice(scores, func(i, j int) bool {

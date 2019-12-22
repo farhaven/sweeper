@@ -12,12 +12,14 @@ import (
 )
 
 type ClientRequest struct {
-	Kind string // kind of request: 'move', 'uncover', 'mark'
+	Kind string // kind of request: 'move', 'uncover', 'mark', 'update-name'
 	X, Y int    // parameters: deltaX, deltaY for move, X and Y relative to viewport for click
+	Name string // new name
 }
 
 const _viewPortWidth = 20
 const _viewPortHeight = 20
+const _maxNameLen = 32
 
 type Player struct {
 	mu       sync.RWMutex
@@ -25,6 +27,7 @@ type Player struct {
 	Viewport image.Rectangle
 	Score    uint
 	Id       string
+	Name     string
 }
 
 func NewPlayer(s *Server, id string) *Player {
@@ -37,7 +40,17 @@ func NewPlayer(s *Server, id string) *Player {
 }
 
 func (p *Player) String() string {
-	return fmt.Sprintf("%s@%s/%d", p.Id, p.Viewport, p.Score)
+	return fmt.Sprintf("%s(%s)@%s/%d", p.Id, p.Name, p.Viewport, p.Score)
+}
+
+func (p *Player) setName(name string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if len(name) > _maxNameLen {
+		name = name[:_maxNameLen] + " ..."
+	}
+	p.Name = name
 }
 
 func (p *Player) setServer(s *Server) {
@@ -186,6 +199,14 @@ func (p *Player) Loop(conn *websocket.Conn) {
 			err = p.s.m.Persist()
 			if err != nil {
 				log.Println("can't persist minefield:", err)
+			}
+			p.s.TriggerGlobalUpdate()
+		case "update-name":
+			log.Println("updating player name to", req.Name)
+			p.setName(req.Name)
+			err = p.s.Persist()
+			if err != nil {
+				log.Println("can't persist player list:", err)
 			}
 			p.s.TriggerGlobalUpdate()
 		default:

@@ -43,3 +43,7 @@ dt {
 .pure-menu-selected {
 	background: #eee;
 }
+
+#player-name {
+	margin-bottom: 1em;
+}
