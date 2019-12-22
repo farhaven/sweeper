@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 
@@ -33,9 +34,10 @@ type Player struct {
 
 func NewPlayer(s *Server, id string) *Player {
 	log.Println("Player with ID", id, "connected")
+	x, y := int(rand.NormFloat64()*100), int(rand.NormFloat64()*100)
 	return &Player{
 		s:        s,
-		Viewport: image.Rect(-_viewPortWidth/2, -_viewPortHeight/2, _viewPortWidth/2, _viewPortHeight/2),
+		Viewport: image.Rect(-_viewPortWidth/2+x, -_viewPortHeight/2+y, _viewPortWidth/2+x, _viewPortHeight/2+y),
 		Id:       id,
 	}
 }
