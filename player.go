@@ -6,7 +6,6 @@ import (
 	"image"
 	"log"
 	"sync"
-	"time"
 
 	"github.com/gorilla/websocket"
 	"golang.org/x/time/rate"
@@ -128,17 +127,6 @@ func (p *Player) Loop(conn *websocket.Conn) {
 	}()
 	// immediately trigger update
 	updateViewport <- true
-	// Periodically send updates
-	ticker := time.NewTicker(5 * time.Second)
-	go func() {
-		for range ticker.C {
-			select {
-			case updateViewport <- true:
-			default:
-			}
-		}
-	}()
-	defer ticker.Stop()
 
 	// TODO:
 	// - send events to user:
