@@ -1,4 +1,5 @@
 *.gob
+admins.json
 foo.png
 sweeper
 acme.dump
