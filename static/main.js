@@ -29,8 +29,6 @@ var Sweeper = {
 			scale = (Math.min(width, window.innerHeight) - (padding * 2)) / Sweeper.Field.width;
 		}
 
-		console.log("update scale", container);
-
 		Sweeper.Field.xscale = scale;
 		Sweeper.Field.yscale = scale;
 
@@ -239,8 +237,6 @@ var Sweeper = {
 			}
 			clearTouchTimeouts();
 
-			console.log("click", event);
-
 			var request = mapEventToField(event);
 
 			if ((new Date()) - touchTime > 1000) {
@@ -376,7 +372,6 @@ var Sweeper = {
 		// Highscore name entry
 		let playerName = document.getElementById("player-name")
 		playerName.addEventListener("change", event => {
-			console.log("player name changed", playerName);
 			let request = {
 				Kind: "update-name",
 				Name: playerName.value,
