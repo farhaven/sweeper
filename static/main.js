@@ -186,10 +186,10 @@ var Sweeper = {
 		};
 		connectSocket();
 
+		var field = document.getElementById("field");
+
 		// Add event handlers for inputs
 		document.addEventListener("keydown", event => {
-			event.preventDefault();
-
 			var request = {
 				Kind: "move",
 				X: 0,
@@ -213,10 +213,9 @@ var Sweeper = {
 					return;
 			}
 
+			event.preventDefault();
 			ws.send(JSON.stringify(request));
 		})
-
-		var field = document.getElementById("field");
 
 		function mapEventToField(event) {
 			let xscale = (Sweeper.Field.width / Sweeper.Viewport.width) * Sweeper.Field.xscale;
