@@ -71,7 +71,7 @@ var Sweeper = {
 
 		// Update player name
 		var playerName = document.getElementById("player-name");
-		playerName.value = message.Name;
+		playerName.placeholder = message.Name;
 
 		Sweeper.clearField();
 
