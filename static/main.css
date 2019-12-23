@@ -46,3 +46,7 @@ dt {
 #player-name {
 	margin-bottom: 1em;
 }
+
+table {
+	width: 100%;
+}
