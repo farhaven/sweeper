@@ -176,7 +176,7 @@ func (p *Player) Loop(conn *websocket.Conn) {
 		case "uncover":
 			result, uncovered := p.s.m.Uncover(p.mapViewport(req))
 			if result != UncoverBoom {
-				p.incScore(uncovered)
+				p.incScore(uint(uncovered))
 			} else {
 				// TODO: Notify player with a "BOOM" message or something
 				p.resetScore()
